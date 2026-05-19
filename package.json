@@ -1,0 +1,28 @@
+{
+  "name": "@feedbackhub/sdk-js",
+  "version": "0.1.0",
+  "description": "Feedback Hub SDK — pure JavaScript. Zero dependencies. Works in any browser, script tag, or framework.",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "unpkg": "./dist/feedback-hub.iife.js",
+  "jsdelivr": "./dist/feedback-hub.iife.js",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch"
+  },
+  "devDependencies": {
+    "tsup": "^8.3.5",
+    "typescript": "^5.6.3"
+  },
+  "keywords": ["feedback", "feature-request", "voting", "roadmap", "sdk", "vanilla-js"]
+}
