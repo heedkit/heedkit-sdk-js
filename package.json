@@ -1,13 +1,13 @@
 {
-  "name": "@feedbackhub/sdk-js",
+  "name": "@featurekit/sdk-js",
   "version": "0.1.0",
-  "description": "Feedback Hub SDK \u2014 pure JavaScript. Zero dependencies. Works in any browser, script tag, or framework.",
+  "description": "Feature Kit SDK \u2014 pure JavaScript. Zero dependencies. Works in any browser, script tag, or framework.",
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
-  "unpkg": "./dist/feedback-hub.iife.js",
-  "jsdelivr": "./dist/feedback-hub.iife.js",
+  "unpkg": "./dist/featurekit.iife.js",
+  "jsdelivr": "./dist/featurekit.iife.js",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",

@@ -10,11 +10,11 @@ export default defineConfig([
     sourcemap: true,
     minify: false,
   },
-  // <script src="..."> consumers: single IIFE bundle exposing window.FeedbackHub
+  // <script src="..."> consumers: single IIFE bundle exposing window.FeatureKit
   {
-    entry: { "feedback-hub": "src/index.ts" },
+    entry: { "featurekit": "src/index.ts" },
     format: ["iife"],
-    globalName: "FeedbackHub",
+    globalName: "FeatureKit",
     minify: true,
     sourcemap: true,
     outExtension: () => ({ js: ".iife.js" }),

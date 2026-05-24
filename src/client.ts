@@ -63,7 +63,7 @@ export type Comment = {
   created_at: string;
 };
 
-export type FeedbackHubConfig = {
+export type FeatureKitConfig = {
   projectKey: string;
   apiUrl?: string;
   user?: EndUser;
@@ -82,8 +82,8 @@ export type InitResult = {
   end_user_id: string;
 };
 
-const DEFAULT_API = "https://api.feedbackhub.dev";
-const DEVICE_ID_KEY = "feedbackhub.device_id";
+const DEFAULT_API = "https://api.featurekit.dev";
+const DEVICE_ID_KEY = "featurekit.device_id";
 
 /**
  * Stable per-browser identifier persisted in localStorage. When the customer
@@ -107,7 +107,7 @@ export function getOrCreateDeviceId(): string | null {
   }
 }
 
-export class FeedbackHubClient {
+export class FeatureKitClient {
   private apiUrl: string;
   private projectKey: string;
   private endUserId: string | null = null;
@@ -117,7 +117,7 @@ export class FeedbackHubClient {
   private kindVisibility: Partial<Record<FeatureKind, Visibility>> = {};
   private kindInteractions: Partial<Record<FeatureKind, KindInteractions>> = {};
 
-  constructor(config: FeedbackHubConfig) {
+  constructor(config: FeatureKitConfig) {
     this.apiUrl = config.apiUrl || DEFAULT_API;
     this.projectKey = config.projectKey;
   }
@@ -205,7 +205,7 @@ export class FeedbackHubClient {
   }
 
   private ensureInit() {
-    if (!this.endUserId) throw new Error("FeedbackHub not initialized — call init() first");
+    if (!this.endUserId) throw new Error("FeatureKit not initialized — call init() first");
   }
 
   private async request<T>(path: string, method: string, body?: unknown): Promise<T> {

@@ -1,10 +1,10 @@
-export { FeedbackHubClient } from "./client";
+export { FeatureKitClient } from "./client";
 export type {
   Comment,
   EndUser,
   Feature,
   FeatureKind,
-  FeedbackHubConfig,
+  FeatureKitConfig,
   GroupMode,
   InitResult,
   Interaction,

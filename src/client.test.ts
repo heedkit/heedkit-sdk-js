@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { FeedbackHubClient, type InitResult } from "./client";
+import { FeatureKitClient, type InitResult } from "./client";
 
 // ---------------------------------------------------------------------------
 // fetch mocking helpers
@@ -63,10 +63,10 @@ afterEach(() => {
 // init() — payload parsing + state hydration
 // ---------------------------------------------------------------------------
 
-describe("FeedbackHubClient.init", () => {
+describe("FeatureKitClient.init", () => {
   it("posts identity to /sdk/init with the project key header", async () => {
     const { calls } = mockFetch(() => jsonResponse(FULL_INIT_RESPONSE));
-    const client = new FeedbackHubClient({ projectKey: "fh_test", apiUrl: "http://api" });
+    const client = new FeatureKitClient({ projectKey: "fh_test", apiUrl: "http://api" });
 
     await client.init({ externalId: "alice", email: "alice@x.com", platform: "tests" });
 
@@ -89,7 +89,7 @@ describe("FeedbackHubClient.init", () => {
 
   it("defaults platform to 'web' when no user is provided", async () => {
     const { calls } = mockFetch(() => jsonResponse(FULL_INIT_RESPONSE));
-    const client = new FeedbackHubClient({ projectKey: "fh_test", apiUrl: "http://api" });
+    const client = new FeatureKitClient({ projectKey: "fh_test", apiUrl: "http://api" });
     await client.init();
     const body = JSON.parse(calls[0].init!.body as string);
     expect(body.platform).toBe("web");
@@ -97,7 +97,7 @@ describe("FeedbackHubClient.init", () => {
 
   it("hydrates theme / enabledKinds / kindVisibility / kindInteractions / endUserId", async () => {
     mockFetch(() => jsonResponse(FULL_INIT_RESPONSE));
-    const client = new FeedbackHubClient({ projectKey: "fh_test", apiUrl: "http://api" });
+    const client = new FeatureKitClient({ projectKey: "fh_test", apiUrl: "http://api" });
 
     await client.init({ externalId: "alice" });
 
@@ -121,7 +121,7 @@ describe("FeedbackHubClient.init", () => {
       end_user_id: "eu",
     };
     mockFetch(() => jsonResponse(partial));
-    const client = new FeedbackHubClient({ projectKey: "fh_test", apiUrl: "http://api" });
+    const client = new FeatureKitClient({ projectKey: "fh_test", apiUrl: "http://api" });
 
     await client.init({ externalId: "alice" });
     // Falls back to empty maps rather than throwing.
@@ -138,7 +138,7 @@ describe("FeedbackHubClient.init", () => {
 describe("getInteractionsFor", () => {
   it("returns enabled interactions in canonical order", async () => {
     mockFetch(() => jsonResponse(FULL_INIT_RESPONSE));
-    const client = new FeedbackHubClient({ projectKey: "fh_test", apiUrl: "http://api" });
+    const client = new FeatureKitClient({ projectKey: "fh_test", apiUrl: "http://api" });
     await client.init({ externalId: "alice" });
 
     // Even though the JSON had `upvote: true, downvote: false`, the canonical
@@ -156,7 +156,7 @@ describe("getInteractionsFor", () => {
         feature_request: { upvote: true, downvote: true },
       },
     }));
-    const client = new FeedbackHubClient({ projectKey: "fh_test", apiUrl: "http://api" });
+    const client = new FeatureKitClient({ projectKey: "fh_test", apiUrl: "http://api" });
     await client.init({ externalId: "alice" });
     expect(client.getInteractionsFor("feature_request")).toEqual(["upvote", "downvote"]);
   });
@@ -166,7 +166,7 @@ describe("getInteractionsFor", () => {
       ...FULL_INIT_RESPONSE,
       kind_interactions: { ...FULL_INIT_RESPONSE.kind_interactions, appreciation: { like: false } },
     }));
-    const client = new FeedbackHubClient({ projectKey: "fh_test", apiUrl: "http://api" });
+    const client = new FeatureKitClient({ projectKey: "fh_test", apiUrl: "http://api" });
     await client.init({ externalId: "alice" });
     expect(client.getInteractionsFor("appreciation")).toEqual([]);
   });
@@ -179,7 +179,7 @@ describe("getInteractionsFor", () => {
 describe("list / submit / vote", () => {
   async function newReady(handler: (call: FetchCall) => Response | Promise<Response>) {
     const records = mockFetch(handler);
-    const client = new FeedbackHubClient({ projectKey: "fh_test", apiUrl: "http://api" });
+    const client = new FeatureKitClient({ projectKey: "fh_test", apiUrl: "http://api" });
     await client.init({ externalId: "alice" });
     records.calls.length = 0;
     return { client, calls: records.calls };
@@ -248,7 +248,7 @@ describe("list / submit / vote", () => {
 
   it("throws Error before init when calling list/submit/vote", async () => {
     mockFetch(() => jsonResponse(FULL_INIT_RESPONSE));
-    const client = new FeedbackHubClient({ projectKey: "fh_test", apiUrl: "http://api" });
+    const client = new FeatureKitClient({ projectKey: "fh_test", apiUrl: "http://api" });
     await expect(client.list()).rejects.toThrow(/not initialized/);
     await expect(client.submit({ title: "x" })).rejects.toThrow(/not initialized/);
     await expect(client.vote("x")).rejects.toThrow(/not initialized/);
@@ -267,7 +267,7 @@ describe("error handling", () => {
         headers: { "Content-Type": "application/json" },
       })
     );
-    const client = new FeedbackHubClient({ projectKey: "bad", apiUrl: "http://api" });
+    const client = new FeatureKitClient({ projectKey: "bad", apiUrl: "http://api" });
     await expect(client.init()).rejects.toThrow(/Invalid project key/);
   });
 
@@ -275,7 +275,7 @@ describe("error handling", () => {
     mockFetch(() =>
       new Response("Internal Server Error", { status: 500 })
     );
-    const client = new FeedbackHubClient({ projectKey: "ok", apiUrl: "http://api" });
+    const client = new FeatureKitClient({ projectKey: "ok", apiUrl: "http://api" });
     await expect(client.init()).rejects.toThrow(/HTTP 500/);
   });
 });
