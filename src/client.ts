@@ -1,8 +1,24 @@
+export type Visibility = "public" | "private";
+
+export type Interaction = "upvote" | "downvote" | "plus_one" | "like";
+
+export type KindInteractions = Partial<Record<Interaction, boolean>>;
+
+export type ShowCounts = Partial<Record<FeatureKind, boolean>>;
+
+export type GroupMode = "tabs" | "list";
+
 export type Theme = {
   primary?: string;
   primaryDark?: string;
   radius?: number;
-  mode?: "light" | "dark";
+  /// `"system"` follows the OS color scheme at render time.
+  mode?: "light" | "dark" | "system";
+  font_family?: string;
+  font_size?: "sm" | "md" | "lg";
+  group_mode?: GroupMode;
+  show_counts?: ShowCounts;
+  // Older deployments may still send camelCase keys for these — kept for backcompat.
   fontFamily?: string;
 };
 
@@ -14,11 +30,23 @@ export type EndUser = {
   platform?: string;
 };
 
+export type FeatureKind =
+  | "feature_request"
+  | "bug_report"
+  | "improvement"
+  | "appreciation"
+  | "other";
+
 export type Feature = {
   id: string;
   title: string;
   description: string;
   status: "open" | "planned" | "in_progress" | "shipped" | "declined";
+  kind: FeatureKind;
+  /// Whether the item is visible beyond its author + the project team.
+  visibility: Visibility;
+  /// Whether the item appears on the project's roadmap (public if visibility=public).
+  on_roadmap: boolean;
   tag: string | null;
   vote_count: number;
   voted: boolean;
@@ -45,6 +73,12 @@ export type InitResult = {
   project_id: string;
   project_name: string;
   theme: Theme;
+  enabled_kinds: FeatureKind[];
+  /// Default visibility applied to new submissions of each kind.
+  kind_visibility: Record<FeatureKind, Visibility>;
+  /// Which interactions admin has enabled per kind. The widget should only render
+  /// the affordances listed here.
+  kind_interactions: Record<FeatureKind, KindInteractions>;
   end_user_id: string;
 };
 
@@ -56,6 +90,9 @@ export class FeedbackHubClient {
   private endUserId: string | null = null;
   private theme: Theme = {};
   private projectName = "";
+  private enabledKinds: FeatureKind[] = [];
+  private kindVisibility: Partial<Record<FeatureKind, Visibility>> = {};
+  private kindInteractions: Partial<Record<FeatureKind, KindInteractions>> = {};
 
   constructor(config: FeedbackHubConfig) {
     this.apiUrl = config.apiUrl || DEFAULT_API;
@@ -74,28 +111,51 @@ export class FeedbackHubClient {
     this.endUserId = res.end_user_id;
     this.theme = res.theme || {};
     this.projectName = res.project_name;
+    this.enabledKinds = res.enabled_kinds || [];
+    this.kindVisibility = res.kind_visibility || {};
+    this.kindInteractions = res.kind_interactions || {};
     return res;
   }
 
   getTheme() { return this.theme; }
+  getEnabledKinds(): FeatureKind[] { return this.enabledKinds; }
+  getKindVisibility() { return this.kindVisibility; }
+  getKindInteractions() { return this.kindInteractions; }
   getProjectName() { return this.projectName; }
   getEndUserId() { return this.endUserId; }
 
-  async list(opts: { status?: string; sort?: "top" | "new" } = {}): Promise<Feature[]> {
+  /// Convenience: which interactions are enabled for a given kind, in stable order.
+  getInteractionsFor(kind: FeatureKind): Interaction[] {
+    const row = this.kindInteractions[kind] || {};
+    return (["upvote", "downvote", "plus_one", "like"] as Interaction[]).filter(
+      (i) => row[i]
+    );
+  }
+
+  async list(
+    opts: { status?: string; kind?: FeatureKind; sort?: "top" | "new" } = {}
+  ): Promise<Feature[]> {
     this.ensureInit();
     const params = new URLSearchParams({ end_user_id: this.endUserId! });
     if (opts.status) params.set("status", opts.status);
+    if (opts.kind) params.set("kind", opts.kind);
     if (opts.sort) params.set("sort", opts.sort);
     return this.request<Feature[]>(`/sdk/features?${params}`, "GET");
   }
 
-  async submit(input: { title: string; description?: string; tag?: string }): Promise<Feature> {
+  async submit(input: {
+    title: string;
+    description?: string;
+    tag?: string;
+    kind?: FeatureKind;
+  }): Promise<Feature> {
     this.ensureInit();
     return this.request<Feature>("/sdk/features", "POST", {
       end_user_id: this.endUserId,
       title: input.title,
       description: input.description || "",
       tag: input.tag || null,
+      kind: input.kind || "feature_request",
     });
   }
 
