@@ -83,6 +83,29 @@ export type InitResult = {
 };
 
 const DEFAULT_API = "https://api.feedbackhub.dev";
+const DEVICE_ID_KEY = "feedbackhub.device_id";
+
+/**
+ * Stable per-browser identifier persisted in localStorage. When the customer
+ * doesn't pass `externalId`, we still want votes/submissions to stick to the
+ * same EndUser across page loads — otherwise every refresh would create a new
+ * anonymous account.
+ *
+ * Returns null on the server (SSR), so callers should fall back to a fresh id.
+ */
+export function getOrCreateDeviceId(): string | null {
+  try {
+    if (typeof window === "undefined" || !window.localStorage) return null;
+    const existing = window.localStorage.getItem(DEVICE_ID_KEY);
+    if (existing) return existing;
+    const next = "dev_" + (crypto?.randomUUID?.() ?? Math.random().toString(36).slice(2));
+    window.localStorage.setItem(DEVICE_ID_KEY, next);
+    return next;
+  } catch {
+    // Privacy mode / disabled storage — caller falls back to anonymous.
+    return null;
+  }
+}
 
 export class FeedbackHubClient {
   private apiUrl: string;
@@ -100,8 +123,11 @@ export class FeedbackHubClient {
   }
 
   async init(user: EndUser = {}): Promise<InitResult> {
+    // If the caller didn't pass an external_id, fall back to a stable
+    // per-browser device id so refreshes keep the same EndUser.
+    const externalId = user.externalId ?? getOrCreateDeviceId() ?? undefined;
     const body = {
-      external_id: user.externalId,
+      external_id: externalId,
       email: user.email,
       name: user.name,
       avatar_url: user.avatarUrl,
