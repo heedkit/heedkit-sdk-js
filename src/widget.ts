@@ -4,6 +4,7 @@ import {
   type Feature,
   type FeatureKind,
   type FeatureKitConfig,
+  type InitResult,
   type Interaction,
   type Theme,
 } from "./client";
@@ -241,7 +242,15 @@ export function mount(options: MountOptions): Widget {
   const container = options.container || document.body;
   const client = new FeatureKitClient(options);
 
-  const initPromise = client.init(options.user || {});
+  // Silence init failures (bad project key, network down, API offline) so
+  // they don't surface as unhandled promise rejections in the host page —
+  // a marketing visitor should never see a Next.js error overlay because
+  // our init 401'd. The launcher just doesn't show; open() no-ops.
+  const initPromise: Promise<InitResult | null> = client.init(options.user || {}).catch((e) => {
+    // eslint-disable-next-line no-console
+    console.warn("[FeatureKit] widget init failed; launcher disabled.", e);
+    return null;
+  });
 
   let overlay: HTMLDivElement | null = null;
   let launcher: HTMLButtonElement | null = null;
@@ -255,6 +264,7 @@ export function mount(options: MountOptions): Widget {
 
   async function open() {
     const r = await initPromise;
+    if (!r) return;  // init failed; nothing to render
     if (overlay) return;
     overlay = renderPanel(client, r.theme, close);
     container.appendChild(overlay);
@@ -262,6 +272,7 @@ export function mount(options: MountOptions): Widget {
 
   if (!options.hideLauncher) {
     initPromise.then((r) => {
+      if (!r) return;  // init failed; skip the launcher entirely
       launcher = el("button", { class: "fk-launcher", type: "button" }, [
         options.label || "Feedback",
       ]) as HTMLButtonElement;
