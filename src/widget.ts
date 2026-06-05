@@ -266,7 +266,7 @@ export function mount(options: MountOptions): Widget {
     const r = await initPromise;
     if (!r) return;  // init failed; nothing to render
     if (overlay) return;
-    overlay = renderPanel(client, r.theme, close);
+    overlay = renderPanel(client, client.getTheme(), close);
     container.appendChild(overlay);
   }
 
@@ -276,7 +276,7 @@ export function mount(options: MountOptions): Widget {
       launcher = el("button", { class: "fk-launcher", type: "button" }, [
         options.label || "Feedback",
       ]) as HTMLButtonElement;
-      applyTheme(launcher, r.theme);
+      applyTheme(launcher, client.getTheme());
       launcher.addEventListener("click", open);
       container.appendChild(launcher);
     });

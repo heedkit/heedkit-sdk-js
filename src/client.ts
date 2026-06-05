@@ -69,9 +69,9 @@ export type FeatureKitConfig = {
   user?: EndUser;
 };
 
-export type InitResult = {
-  project_id: string;
-  project_name: string;
+/// Project configuration returned by /sdk/init (nested under `project`).
+export type ProjectConfig = {
+  name: string;
   theme: Theme;
   enabled_kinds: FeatureKind[];
   /// Default visibility applied to new submissions of each kind.
@@ -79,7 +79,12 @@ export type InitResult = {
   /// Which interactions admin has enabled per kind. The widget should only render
   /// the affordances listed here.
   kind_interactions: Record<FeatureKind, KindInteractions>;
+  is_public_roadmap?: boolean;
+};
+
+export type InitResult = {
   end_user_id: string;
+  project: ProjectConfig;
 };
 
 const DEFAULT_API = "https://api.featurekit.dev";
@@ -105,6 +110,37 @@ export function getOrCreateDeviceId(): string | null {
     // Privacy mode / disabled storage — caller falls back to anonymous.
     return null;
   }
+}
+
+/// Map a raw API feature onto the SDK shape (the backend compacts null fields and
+/// exposes the author display name as `author`).
+function normalizeFeature(f: any): Feature {
+  return {
+    id: String(f.id),
+    title: f.title,
+    description: f.description ?? "",
+    status: f.status,
+    kind: f.kind,
+    visibility: f.visibility,
+    on_roadmap: f.on_roadmap ?? false,
+    tag: f.tag ?? null,
+    vote_count: f.vote_count ?? 0,
+    voted: f.voted ?? false,
+    platform: f.platform ?? null,
+    author_name: f.author_name ?? f.author ?? null,
+    created_at: f.created_at,
+  };
+}
+
+function normalizeComment(c: any): Comment {
+  return {
+    id: String(c.id),
+    body: c.body,
+    author_name: c.author_name ?? c.author ?? null,
+    // The SDK endpoint only ever returns public comments.
+    is_internal: c.is_internal ?? false,
+    created_at: c.created_at,
+  };
 }
 
 export class FeatureKitClient {
@@ -135,11 +171,14 @@ export class FeatureKitClient {
     };
     const res = await this.request<InitResult>("/sdk/init", "POST", body);
     this.endUserId = res.end_user_id;
-    this.theme = res.theme || {};
-    this.projectName = res.project_name;
-    this.enabledKinds = res.enabled_kinds || [];
-    this.kindVisibility = res.kind_visibility || {};
-    this.kindInteractions = res.kind_interactions || {};
+    // The Rails backend nests project config under `project`; tolerate a flat
+    // response from older deployments too.
+    const p: any = (res as any).project ?? res;
+    this.theme = p.theme || {};
+    this.projectName = p.name ?? p.project_name ?? "";
+    this.enabledKinds = p.enabled_kinds || [];
+    this.kindVisibility = p.kind_visibility || {};
+    this.kindInteractions = p.kind_interactions || {};
     return res;
   }
 
@@ -166,7 +205,10 @@ export class FeatureKitClient {
     if (opts.status) params.set("status", opts.status);
     if (opts.kind) params.set("kind", opts.kind);
     if (opts.sort) params.set("sort", opts.sort);
-    return this.request<Feature[]>(`/sdk/features?${params}`, "GET");
+    // Rails returns { features, next_cursor }; tolerate a bare array too.
+    const res = await this.request<any>(`/sdk/features?${params}`, "GET");
+    const features = Array.isArray(res) ? res : (res.features ?? []);
+    return features.map((f: any) => normalizeFeature(f));
   }
 
   async submit(input: {
@@ -176,13 +218,14 @@ export class FeatureKitClient {
     kind?: FeatureKind;
   }): Promise<Feature> {
     this.ensureInit();
-    return this.request<Feature>("/sdk/features", "POST", {
+    const res = await this.request<any>("/sdk/features", "POST", {
       end_user_id: this.endUserId,
       title: input.title,
       description: input.description || "",
       tag: input.tag || null,
       kind: input.kind || "feature_request",
     });
+    return normalizeFeature(res);
   }
 
   async vote(featureId: string): Promise<{ voted: boolean; vote_count: number }> {
@@ -193,15 +236,18 @@ export class FeatureKitClient {
   }
 
   async listComments(featureId: string): Promise<Comment[]> {
-    return this.request<Comment[]>(`/sdk/features/${featureId}/comments`, "GET");
+    const res = await this.request<any>(`/sdk/features/${featureId}/comments`, "GET");
+    const comments = Array.isArray(res) ? res : (res.comments ?? []);
+    return comments.map((c: any) => normalizeComment(c));
   }
 
   async comment(featureId: string, body: string): Promise<Comment> {
     this.ensureInit();
-    return this.request<Comment>(`/sdk/features/${featureId}/comments`, "POST", {
+    const res = await this.request<any>(`/sdk/features/${featureId}/comments`, "POST", {
       end_user_id: this.endUserId,
       body,
     });
+    return normalizeComment(res);
   }
 
   private ensureInit() {
@@ -219,7 +265,10 @@ export class FeatureKitClient {
     });
     if (!res.ok) {
       let detail = `HTTP ${res.status}`;
-      try { detail = (await res.json()).detail || detail; } catch {}
+      try {
+        const j = await res.json();
+        detail = j.error || j.detail || detail; // Rails uses `error`; legacy used `detail`.
+      } catch { /* non-JSON body */ }
       throw new Error(detail);
     }
     return res.json() as Promise<T>;

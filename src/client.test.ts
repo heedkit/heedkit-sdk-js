@@ -27,26 +27,29 @@ function jsonResponse(body: unknown, status = 200): Response {
   });
 }
 
+// The Rails /sdk/init response nests project config under `project`.
 const FULL_INIT_RESPONSE: InitResult = {
-  project_id: "proj-1",
-  project_name: "Test",
-  theme: { primary: "#000000" },
-  enabled_kinds: ["feature_request", "bug_report", "improvement", "appreciation", "other"],
-  kind_visibility: {
-    feature_request: "public",
-    bug_report: "private",
-    improvement: "private",
-    appreciation: "private",
-    other: "private",
-  },
-  kind_interactions: {
-    feature_request: { upvote: true, downvote: false },
-    bug_report: { plus_one: true },
-    improvement: { upvote: true, downvote: false },
-    appreciation: { like: true },
-    other: { like: true },
-  },
   end_user_id: "eu-alice",
+  project: {
+    name: "Test",
+    theme: { primary: "#000000" },
+    enabled_kinds: ["feature_request", "bug_report", "improvement", "appreciation", "other"],
+    kind_visibility: {
+      feature_request: "public",
+      bug_report: "private",
+      improvement: "private",
+      appreciation: "private",
+      other: "private",
+    },
+    kind_interactions: {
+      feature_request: { upvote: true, downvote: false },
+      bug_report: { plus_one: true },
+      improvement: { upvote: true, downvote: false },
+      appreciation: { like: true },
+      other: { like: true },
+    },
+    is_public_roadmap: false,
+  },
 };
 
 let originalFetch: typeof fetch;
@@ -151,9 +154,12 @@ describe("getInteractionsFor", () => {
   it("returns up+down together when both enabled", async () => {
     mockFetch(() => jsonResponse({
       ...FULL_INIT_RESPONSE,
-      kind_interactions: {
-        ...FULL_INIT_RESPONSE.kind_interactions,
-        feature_request: { upvote: true, downvote: true },
+      project: {
+        ...FULL_INIT_RESPONSE.project,
+        kind_interactions: {
+          ...FULL_INIT_RESPONSE.project.kind_interactions,
+          feature_request: { upvote: true, downvote: true },
+        },
       },
     }));
     const client = new FeatureKitClient({ projectKey: "fh_test", apiUrl: "http://api" });
@@ -164,7 +170,10 @@ describe("getInteractionsFor", () => {
   it("returns empty array for a kind that has no interactions enabled", async () => {
     mockFetch(() => jsonResponse({
       ...FULL_INIT_RESPONSE,
-      kind_interactions: { ...FULL_INIT_RESPONSE.kind_interactions, appreciation: { like: false } },
+      project: {
+        ...FULL_INIT_RESPONSE.project,
+        kind_interactions: { ...FULL_INIT_RESPONSE.project.kind_interactions, appreciation: { like: false } },
+      },
     }));
     const client = new FeatureKitClient({ projectKey: "fh_test", apiUrl: "http://api" });
     await client.init({ externalId: "alice" });
@@ -187,7 +196,7 @@ describe("list / submit / vote", () => {
 
   it("list sends end_user_id and any provided filters", async () => {
     const { client, calls } = await newReady((call) => {
-      if (call.url.includes("/sdk/features")) return jsonResponse([]);
+      if (call.url.includes("/sdk/features")) return jsonResponse({ features: [], next_cursor: null });
       return jsonResponse(FULL_INIT_RESPONSE);
     });
 
@@ -199,6 +208,35 @@ describe("list / submit / vote", () => {
     expect(url.searchParams.get("status")).toBe("planned");
     expect(url.searchParams.get("kind")).toBe("bug_report");
     expect(url.searchParams.get("sort")).toBe("new");
+  });
+
+  it("list unwraps { features } and maps `author` -> author_name", async () => {
+    const { client } = await newReady((call) => {
+      if (call.url.includes("/sdk/features"))
+        return jsonResponse({
+          features: [ { id: 7, title: "Dark mode", status: "planned", kind: "feature_request", visibility: "public", vote_count: 3, author: "Dana", created_at: "2026-01-01T00:00:00Z" } ],
+          next_cursor: null,
+        });
+      return jsonResponse(FULL_INIT_RESPONSE);
+    });
+    const features = await client.list();
+    expect(features).toHaveLength(1);
+    expect(features[0].id).toBe("7");
+    expect(features[0].author_name).toBe("Dana");
+    expect(features[0].voted).toBe(false);
+    expect(features[0].on_roadmap).toBe(false);
+  });
+
+  it("listComments unwraps { comments } and maps `author` -> author_name", async () => {
+    const { client } = await newReady((call) => {
+      if (call.url.includes("/comments"))
+        return jsonResponse({ comments: [ { id: 1, body: "yes please", author: "Sam", created_at: "2026-01-01T00:00:00Z" } ] });
+      return jsonResponse(FULL_INIT_RESPONSE);
+    });
+    const comments = await client.listComments("7");
+    expect(comments).toHaveLength(1);
+    expect(comments[0].author_name).toBe("Sam");
+    expect(comments[0].is_internal).toBe(false);
   });
 
   it("submit posts the correct body and defaults kind to feature_request", async () => {
@@ -260,7 +298,18 @@ describe("list / submit / vote", () => {
 // ---------------------------------------------------------------------------
 
 describe("error handling", () => {
-  it("surfaces the API's detail field on a 4xx", async () => {
+  it("surfaces the Rails `error` code on a 4xx", async () => {
+    mockFetch(() =>
+      new Response(JSON.stringify({ error: "invalid_project_key" }), {
+        status: 401,
+        headers: { "Content-Type": "application/json" },
+      })
+    );
+    const client = new FeatureKitClient({ projectKey: "bad", apiUrl: "http://api" });
+    await expect(client.init()).rejects.toThrow(/invalid_project_key/);
+  });
+
+  it("falls back to the legacy `detail` field when `error` is absent", async () => {
     mockFetch(() =>
       new Response(JSON.stringify({ detail: "Invalid project key" }), {
         status: 401,
