@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>FeatureKit SDK — vanilla TS demo</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+      :root {
+        --bg: #f8fafc;
+        --card: #ffffff;
+        --fg: #0f172a;
+        --muted: #64748b;
+        --border: #e2e8f0;
+        --primary: #0d9488;
+      }
+      * { box-sizing: border-box; }
+      body {
+        font-family: system-ui, -apple-system, sans-serif;
+        max-width: 720px; margin: 40px auto; padding: 0 16px;
+        background: var(--bg); color: var(--fg); line-height: 1.5;
+      }
+      h1 { font-size: 26px; margin-bottom: 4px; }
+      .sub { color: var(--muted); margin-top: 0; }
+      .banner {
+        background: #fef3c7; border: 1px solid #fcd34d; color: #92400e;
+        padding: 10px 14px; border-radius: 8px; font-size: 14px; margin: 16px 0;
+      }
+      .banner[hidden] { display: none; }
+      section { margin-top: 28px; }
+      h2 { font-size: 15px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
+      .card {
+        background: var(--card); border: 1px solid var(--border);
+        border-radius: 10px; padding: 14px; margin-bottom: 10px;
+      }
+      .feature-head { display: flex; gap: 12px; align-items: flex-start; }
+      .vote-btn {
+        flex: 0 0 auto; display: flex; flex-direction: column; align-items: center;
+        min-width: 52px; padding: 8px; border: 1px solid var(--border);
+        background: transparent; border-radius: 8px; cursor: pointer; font: inherit;
+        font-weight: 600; color: var(--fg);
+      }
+      .vote-btn[data-voted="true"] {
+        border-color: var(--primary); color: var(--primary);
+        background: color-mix(in srgb, var(--primary) 12%, transparent);
+      }
+      .vote-arrow { font-size: 14px; line-height: 1; }
+      .feature-body { flex: 1; min-width: 0; }
+      .feature-title { font-weight: 600; }
+      .feature-desc { color: var(--muted); font-size: 14px; margin-top: 2px; }
+      .badges { display: flex; gap: 6px; margin-top: 6px; flex-wrap: wrap; }
+      .badge {
+        font-size: 11px; text-transform: uppercase; letter-spacing: .04em;
+        padding: 2px 8px; border-radius: 999px; background: var(--border); color: var(--muted);
+      }
+      .links { margin-top: 8px; font-size: 13px; }
+      .link-btn {
+        background: none; border: 0; color: var(--primary); cursor: pointer;
+        font: inherit; padding: 0; text-decoration: underline;
+      }
+      .comments { margin-top: 10px; border-top: 1px dashed var(--border); padding-top: 8px; }
+      .comment { font-size: 13px; padding: 4px 0; }
+      .comment-author { font-weight: 600; }
+      .comment-form { display: flex; gap: 6px; margin-top: 6px; }
+      .comment-form input { flex: 1; }
+      input, textarea {
+        width: 100%; padding: 9px 11px; border: 1px solid var(--border);
+        border-radius: 8px; font: inherit; background: #fff; color: var(--fg);
+      }
+      textarea { resize: vertical; min-height: 72px; }
+      label { display: block; font-size: 13px; font-weight: 500; margin: 10px 0 4px; }
+      button.primary {
+        background: var(--primary); color: #fff; border: 0; border-radius: 8px;
+        padding: 10px 16px; font: inherit; font-weight: 600; cursor: pointer; margin-top: 14px;
+      }
+      button[disabled] { opacity: .55; cursor: not-allowed; }
+      .row-controls { display: flex; gap: 8px; align-items: center; margin-bottom: 12px; }
+      select { padding: 6px 8px; border-radius: 8px; border: 1px solid var(--border); font: inherit; }
+      .muted { color: var(--muted); font-size: 13px; }
+    </style>
+  </head>
+  <body>
+    <h1 id="project-name">FeatureKit demo</h1>
+    <p class="sub">Vanilla TypeScript + Vite, using the local <code>FeatureKitClient</code> from <code>../src</code>.</p>
+
+    <div id="config-banner" class="banner" hidden></div>
+
+    <section>
+      <h2>Roadmap / feedback</h2>
+      <div class="row-controls">
+        <label for="sort" style="margin:0">Sort</label>
+        <select id="sort">
+          <option value="top">Top</option>
+          <option value="new">New</option>
+        </select>
+        <button id="reload" class="link-btn" type="button">Refresh</button>
+      </div>
+      <div id="features"><p class="muted">Initializing…</p></div>
+    </section>
+
+    <section>
+      <h2>Submit a new feature</h2>
+      <form id="submit-form">
+        <label for="title">Title</label>
+        <input id="title" type="text" placeholder="What should we build?" required />
+        <label for="description">Description</label>
+        <textarea id="description" placeholder="Any extra context helps."></textarea>
+        <label for="kind">Kind</label>
+        <select id="kind"></select>
+        <button type="submit" class="primary">Submit</button>
+      </form>
+    </section>
+
+    <!-- main.ts wires the SDK to the DOM above. -->
+    <script type="module" src="/main.ts"></script>
+  </body>
+</html>

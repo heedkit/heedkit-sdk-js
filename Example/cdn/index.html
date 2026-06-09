@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>FeatureKit — no-build (CDN widget) example</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+      body { font-family: system-ui, sans-serif; max-width: 640px; margin: 80px auto; padding: 0 16px; line-height: 1.55; }
+      h1 { font-size: 28px; }
+      code { background: #f1f5f9; padding: 2px 6px; border-radius: 4px; }
+    </style>
+  </head>
+  <body>
+    <h1>FeatureKit — no-build widget</h1>
+    <p>
+      The launcher in the bottom-right was mounted by the script below — no npm
+      install, no bundler. This variant uses the SDK's prebuilt
+      <code>mount()</code> widget instead of the lower-level client.
+    </p>
+    <p>
+      Replace <code>pk_REPLACE_ME</code> with your project key from the console
+      Install page, and point <code>apiUrl</code> at your Rails server.
+    </p>
+
+    <!-- 1. Load the prebuilt SDK from a CDN. -->
+    <script src="https://cdn.jsdelivr.net/npm/@featurekit/sdk-js/dist/featurekit.iife.js"></script>
+
+    <!-- 2. Mount the widget. The launcher appears bottom-right and opens a
+            themed panel that lists features and lets users vote / comment /
+            submit. apiUrl is the bare Rails origin (the SDK appends /sdk).
+            Browser dev host: http://featurekit.localhost:3000 -->
+    <script>
+      window.FeatureKit.mount({
+        projectKey: "pk_REPLACE_ME",
+        apiUrl: "http://featurekit.localhost:3000",
+        user: { externalId: "demo-user" },
+        label: "Send feedback",
+      });
+    </script>
+  </body>
+</html>
