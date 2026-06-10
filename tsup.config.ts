@@ -10,11 +10,11 @@ export default defineConfig([
     sourcemap: true,
     minify: false,
   },
-  // <script src="..."> consumers: single IIFE bundle exposing window.FeatureKit
+  // <script src="..."> consumers: single IIFE bundle exposing window.HeedKit
   {
-    entry: { "featurekit": "src/index.ts" },
+    entry: { "heedkit": "src/index.ts" },
     format: ["iife"],
-    globalName: "FeatureKit",
+    globalName: "HeedKit",
     minify: true,
     sourcemap: true,
     outExtension: () => ({ js: ".iife.js" }),

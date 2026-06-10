@@ -63,7 +63,7 @@ export type Comment = {
   created_at: string;
 };
 
-export type FeatureKitConfig = {
+export type HeedKitConfig = {
   projectKey: string;
   apiUrl?: string;
   user?: EndUser;
@@ -87,8 +87,8 @@ export type InitResult = {
   project: ProjectConfig;
 };
 
-const DEFAULT_API = "https://api.featurekit.dev";
-const DEVICE_ID_KEY = "featurekit.device_id";
+const DEFAULT_API = "https://api.heedkit.com";
+const DEVICE_ID_KEY = "heedkit.device_id";
 
 /**
  * Stable per-browser identifier persisted in localStorage. When the customer
@@ -143,7 +143,7 @@ function normalizeComment(c: any): Comment {
   };
 }
 
-export class FeatureKitClient {
+export class HeedKitClient {
   private apiUrl: string;
   private projectKey: string;
   private endUserId: string | null = null;
@@ -153,7 +153,7 @@ export class FeatureKitClient {
   private kindVisibility: Partial<Record<FeatureKind, Visibility>> = {};
   private kindInteractions: Partial<Record<FeatureKind, KindInteractions>> = {};
 
-  constructor(config: FeatureKitConfig) {
+  constructor(config: HeedKitConfig) {
     this.apiUrl = config.apiUrl || DEFAULT_API;
     this.projectKey = config.projectKey;
   }
@@ -251,7 +251,7 @@ export class FeatureKitClient {
   }
 
   private ensureInit() {
-    if (!this.endUserId) throw new Error("FeatureKit not initialized — call init() first");
+    if (!this.endUserId) throw new Error("HeedKit not initialized — call init() first");
   }
 
   private async request<T>(path: string, method: string, body?: unknown): Promise<T> {

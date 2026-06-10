@@ -1,17 +1,17 @@
-# @featurekit/sdk-js
+# @heedkit/sdk-js
 
-Zero-dependency JavaScript SDK for Feature Kit. Works in any browser, with any framework, or none at all.
+Zero-dependency JavaScript SDK for HeedKit. Works in any browser, with any framework, or none at all.
 
 ## Install
 
 ### npm
 
 ```bash
-npm i @featurekit/sdk-js
+npm i @heedkit/sdk-js
 ```
 
 ```ts
-import { mount } from "@featurekit/sdk-js";
+import { mount } from "@heedkit/sdk-js";
 
 mount({
   projectKey: "fh_xxx",
@@ -22,9 +22,9 @@ mount({
 ### `<script>` tag (no build step)
 
 ```html
-<script src="https://cdn.jsdelivr.net/npm/@featurekit/sdk-js/dist/featurekit.iife.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@heedkit/sdk-js/dist/heedkit.iife.js"></script>
 <script>
-  FeatureKit.mount({
+  HeedKit.mount({
     projectKey: "fh_xxx",
     user: { externalId: "user-123" },
   });
@@ -66,9 +66,9 @@ await widget.client.submit({ title: "Dark mode", description: "..." });
 If you want to use the API client without the widget UI:
 
 ```ts
-import { FeatureKitClient } from "@featurekit/sdk-js";
+import { HeedKitClient } from "@heedkit/sdk-js";
 
-const client = new FeatureKitClient({ projectKey: "fh_xxx" });
+const client = new HeedKitClient({ projectKey: "fh_xxx" });
 await client.init({ externalId: "user-123" });
 const features = await client.list();
 ```
