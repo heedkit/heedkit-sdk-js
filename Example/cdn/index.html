@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <title>FeatureKit — no-build (CDN widget) example</title>
+    <title>HeedKit — no-build (CDN widget) example</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <style>
       body { font-family: system-ui, sans-serif; max-width: 640px; margin: 80px auto; padding: 0 16px; line-height: 1.55; }
@@ -11,7 +11,7 @@
     </style>
   </head>
   <body>
-    <h1>FeatureKit — no-build widget</h1>
+    <h1>HeedKit — no-build widget</h1>
     <p>
       The launcher in the bottom-right was mounted by the script below — no npm
       install, no bundler. This variant uses the SDK's prebuilt
@@ -23,16 +23,16 @@
     </p>
 
     <!-- 1. Load the prebuilt SDK from a CDN. -->
-    <script src="https://cdn.jsdelivr.net/npm/@featurekit/sdk-js/dist/featurekit.iife.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@heedkit/sdk-js/dist/heedkit.iife.js"></script>
 
     <!-- 2. Mount the widget. The launcher appears bottom-right and opens a
             themed panel that lists features and lets users vote / comment /
             submit. apiUrl is the bare Rails origin (the SDK appends /sdk).
-            Browser dev host: http://featurekit.localhost:3000 -->
+            Browser dev host: http://heedkit.localhost:3000 -->
     <script>
-      window.FeatureKit.mount({
+      window.HeedKit.mount({
         projectKey: "pk_REPLACE_ME",
-        apiUrl: "http://featurekit.localhost:3000",
+        apiUrl: "http://heedkit.localhost:3000",
         user: { externalId: "demo-user" },
         label: "Send feedback",
       });

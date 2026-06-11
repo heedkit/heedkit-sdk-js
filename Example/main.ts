@@ -1,9 +1,9 @@
-// FeatureKit SDK — vanilla TypeScript demo
+// HeedKit SDK — vanilla TypeScript demo
 // ------------------------------------------------------------------
 // Imports the SDK straight from this repo's source (../src), not a
 // published package. Vite compiles the TS on the fly.
 import {
-  FeatureKitClient,
+  HeedKitClient,
   type Comment,
   type Feature,
   type FeatureKind,
@@ -12,20 +12,20 @@ import {
 // ------------------------------------------------------------------
 // CONFIG — edit these two, or set them via Vite env vars.
 //
-//   VITE_FEATUREKIT_PROJECT_KEY   public project key (starts with pk_)
-//   VITE_FEATUREKIT_API_URL       Rails endpoint (no trailing /sdk)
+//   VITE_HEEDKIT_PROJECT_KEY   public project key (starts with pk_)
+//   VITE_HEEDKIT_API_URL       Rails endpoint (no trailing /sdk)
 //
-// Browser code talks to the Rails dev server at featurekit.localhost:3000.
+// Browser code talks to the Rails dev server at heedkit.localhost:3000.
 // The SDK appends "/sdk" to apiUrl itself (see client.ts request()), so
 // apiUrl is the bare origin.
 // ------------------------------------------------------------------
 const CONFIG = {
   projectKey:
-    (import.meta.env.VITE_FEATUREKIT_PROJECT_KEY as string | undefined) ??
+    (import.meta.env.VITE_HEEDKIT_PROJECT_KEY as string | undefined) ??
     "pk_REPLACE_ME",
   apiUrl:
-    (import.meta.env.VITE_FEATUREKIT_API_URL as string | undefined) ??
-    "http://featurekit.localhost:3000",
+    (import.meta.env.VITE_HEEDKIT_API_URL as string | undefined) ??
+    "http://heedkit.localhost:3000",
 };
 
 // Human-friendly labels for each feature kind.
@@ -56,7 +56,7 @@ const kindEl = $<HTMLSelectElement>("#kind");
 // ------------------------------------------------------------------
 // The single SDK client used throughout the demo.
 // ------------------------------------------------------------------
-const client = new FeatureKitClient({
+const client = new HeedKitClient({
   projectKey: CONFIG.projectKey,
   apiUrl: CONFIG.apiUrl,
 });
@@ -75,7 +75,7 @@ function showBanner(msg: string) {
 async function start() {
   if (CONFIG.projectKey === "pk_REPLACE_ME") {
     showBanner(
-      "Set a real project key: edit CONFIG.projectKey in main.ts or run with VITE_FEATUREKIT_PROJECT_KEY=pk_... npm run dev",
+      "Set a real project key: edit CONFIG.projectKey in main.ts or run with VITE_HEEDKIT_PROJECT_KEY=pk_... npm run dev",
     );
   }
 
@@ -86,7 +86,7 @@ async function start() {
       email: "demo@example.com",
       platform: "web",
     });
-    projectNameEl.textContent = result.project.name || "FeatureKit demo";
+    projectNameEl.textContent = result.project.name || "HeedKit demo";
     populateKindOptions();
     await loadFeatures();
   } catch (err) {

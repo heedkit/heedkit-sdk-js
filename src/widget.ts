@@ -1,9 +1,9 @@
 import {
-  FeatureKitClient,
+  HeedKitClient,
   type Comment,
   type Feature,
   type FeatureKind,
-  type FeatureKitConfig,
+  type HeedKitConfig,
   type InitResult,
   type Interaction,
   type Theme,
@@ -35,14 +35,14 @@ const FONT_SIZES = { sm: "13px", md: "14px", lg: "16px" } as const;
 // Public surface
 // ---------------------------------------------------------------------------
 
-export type MountOptions = FeatureKitConfig & {
+export type MountOptions = HeedKitConfig & {
   label?: string;
   hideLauncher?: boolean;
   container?: HTMLElement;
 };
 
 export type Widget = {
-  client: FeatureKitClient;
+  client: HeedKitClient;
   open: () => void;
   close: () => void;
   destroy: () => void;
@@ -52,7 +52,7 @@ export type Widget = {
 // Style sheet (single inject; relies on CSS custom properties for theming)
 // ---------------------------------------------------------------------------
 
-const STYLE_ID = "featurekit-styles";
+const STYLE_ID = "heedkit-styles";
 
 const CSS = `
 .fk-launcher {
@@ -240,7 +240,7 @@ export function mount(options: MountOptions): Widget {
   injectStyles();
 
   const container = options.container || document.body;
-  const client = new FeatureKitClient(options);
+  const client = new HeedKitClient(options);
 
   // Silence init failures (bad project key, network down, API offline) so
   // they don't surface as unhandled promise rejections in the host page —
@@ -248,7 +248,7 @@ export function mount(options: MountOptions): Widget {
   // our init 401'd. The launcher just doesn't show; open() no-ops.
   const initPromise: Promise<InitResult | null> = client.init(options.user || {}).catch((e) => {
     // eslint-disable-next-line no-console
-    console.warn("[FeatureKit] widget init failed; launcher disabled.", e);
+    console.warn("[HeedKit] widget init failed; launcher disabled.", e);
     return null;
   });
 
@@ -298,7 +298,7 @@ export function mount(options: MountOptions): Widget {
 // ---------------------------------------------------------------------------
 
 function renderPanel(
-  client: FeatureKitClient,
+  client: HeedKitClient,
   theme: Theme,
   onClose: () => void,
 ): HTMLDivElement {

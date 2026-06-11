@@ -1,10 +1,10 @@
-export { FeatureKitClient } from "./client";
+export { HeedKitClient } from "./client";
 export type {
   Comment,
   EndUser,
   Feature,
   FeatureKind,
-  FeatureKitConfig,
+  HeedKitConfig,
   GroupMode,
   InitResult,
   Interaction,

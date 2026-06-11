@@ -1,13 +1,13 @@
 {
-  "name": "@featurekit/sdk-js",
+  "name": "@heedkit/sdk-js",
   "version": "0.1.0",
-  "description": "Feature Kit SDK \u2014 pure JavaScript. Zero dependencies. Works in any browser, script tag, or framework.",
+  "description": "HeedKit SDK \u2014 pure JavaScript. Zero dependencies. Works in any browser, script tag, or framework.",
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
-  "unpkg": "./dist/featurekit.iife.js",
-  "jsdelivr": "./dist/featurekit.iife.js",
+  "unpkg": "./dist/heedkit.iife.js",
+  "jsdelivr": "./dist/heedkit.iife.js",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
