@@ -1,6 +1,7 @@
 {
   "name": "@heedkit/sdk-react",
   "version": "0.1.0",
+  "private": true,
   "description": "HeedKit feedback widget \u2014 React bindings",
   "type": "module",
   "main": "./dist/index.cjs",
