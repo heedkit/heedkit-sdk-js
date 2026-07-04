@@ -1,0 +1,56 @@
+{
+  "name": "@heedkit/sdk-js",
+  "version": "0.1.0",
+  "description": "HeedKit SDK — pure JavaScript. Zero dependencies. Works in any browser, script tag, or framework.",
+  "license": "MIT",
+  "author": "HeedKit",
+  "homepage": "https://github.com/heedkit/heedkit-sdk-js#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/heedkit/heedkit-sdk-js.git",
+    "directory": "packages/core"
+  },
+  "bugs": {
+    "url": "https://github.com/heedkit/heedkit-sdk-js/issues"
+  },
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "unpkg": "./dist/heedkit.iife.js",
+  "jsdelivr": "./dist/heedkit.iife.js",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "files": ["dist"],
+  "sideEffects": false,
+  "engines": {
+    "node": ">=18"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "test": "vitest run src/client.test.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "tsup": "^8.3.5",
+    "typescript": "^5.6.3",
+    "vitest": "^3.2.4"
+  },
+  "keywords": [
+    "feedback",
+    "feature-request",
+    "voting",
+    "roadmap",
+    "sdk",
+    "vanilla-js"
+  ]
+}
