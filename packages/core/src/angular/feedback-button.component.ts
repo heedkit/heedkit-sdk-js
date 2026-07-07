@@ -1,7 +1,7 @@
 import { Component, Input, OnDestroy, OnInit, effect, inject } from "@angular/core";
 
 import { HeedKitService } from "./heedkit.service";
-import { mount, type Widget } from "@heedkit/sdk-js";
+import { mount, type Widget } from "../index";
 
 /**
  * Thin Angular wrapper around the shared JS widget — same rendering as the

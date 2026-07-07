@@ -8,7 +8,10 @@
     "skipLibCheck": true,
     "declaration": true,
     "outDir": "dist",
-    "lib": ["DOM", "ES2018"]
+    "lib": ["DOM", "ES2018"],
+    "jsx": "react-jsx",
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true
   },
   "include": ["src"]
 }

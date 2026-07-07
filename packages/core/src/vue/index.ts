@@ -1,6 +1,6 @@
 export { createHeedKit, HEEDKIT_KEY, type HeedKitInjection } from "./plugin";
-export { HeedKitClient } from "@heedkit/sdk-js";
-export { mount, type Widget } from "@heedkit/sdk-js";
+export { HeedKitClient } from "../index";
+export { mount, type Widget } from "../index";
 export type {
   Comment,
   EndUser,
@@ -14,5 +14,5 @@ export type {
   ShowCounts,
   Theme,
   Visibility,
-} from "@heedkit/sdk-js";
-export { default as FeedbackButton } from "./FeedbackButton.vue";
+} from "../index";
+export { default as FeedbackButton } from "./FeedbackButton";

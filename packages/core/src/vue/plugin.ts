@@ -1,5 +1,5 @@
 import { ref, type App, type InjectionKey, type Ref } from "vue";
-import { HeedKitClient, type EndUser, type HeedKitConfig, type Theme } from "@heedkit/sdk-js";
+import { HeedKitClient, type EndUser, type HeedKitConfig, type Theme } from "../index";
 
 export type HeedKitInjection = {
   client: HeedKitClient;

@@ -1,5 +1,5 @@
 import { EnvironmentProviders, makeEnvironmentProviders } from "@angular/core";
-import type { HeedKitConfig } from "@heedkit/sdk-js";
+import type { HeedKitConfig } from "../index";
 import { HEEDKIT_CONFIG, HeedKitService } from "./heedkit.service";
 
 export function provideHeedKit(config: HeedKitConfig): EnvironmentProviders {

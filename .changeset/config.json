@@ -7,9 +7,5 @@
   "access": "public",
   "baseBranch": "main",
   "updateInternalDependencies": "patch",
-  "ignore": [
-    "@heedkit/sdk-react",
-    "@heedkit/sdk-vue",
-    "@heedkit/sdk-angular"
-  ]
+  "ignore": []
 }

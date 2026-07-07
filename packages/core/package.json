@@ -1,7 +1,7 @@
 {
   "name": "@heedkit/sdk-js",
   "version": "0.1.0",
-  "description": "HeedKit SDK — pure JavaScript. Zero dependencies. Works in any browser, script tag, or framework.",
+  "description": "HeedKit SDK \u2014 pure JavaScript. Zero dependencies. Works in any browser, script tag, or framework.",
   "license": "MIT",
   "author": "HeedKit",
   "homepage": "https://github.com/heedkit/heedkit-sdk-js#readme",
@@ -24,15 +24,46 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
       "require": "./dist/index.cjs"
+    },
+    "./react": {
+      "types": "./dist/react.d.ts",
+      "import": "./dist/react.js",
+      "require": "./dist/react.cjs"
+    },
+    "./vue": {
+      "types": "./dist/vue.d.ts",
+      "import": "./dist/vue.js",
+      "require": "./dist/vue.cjs"
+    },
+    "./angular": {
+      "types": "./dist/angular.d.ts",
+      "import": "./dist/angular.js",
+      "require": "./dist/angular.cjs"
     }
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "sideEffects": false,
   "engines": {
     "node": ">=18"
   },
   "publishConfig": {
     "access": "public"
+  },
+  "peerDependencies": {
+    "react": ">=17",
+    "vue": ">=3",
+    "@angular/core": ">=17",
+    "@angular/common": ">=17",
+    "rxjs": ">=7"
+  },
+  "peerDependenciesMeta": {
+    "react": { "optional": true },
+    "vue": { "optional": true },
+    "@angular/core": { "optional": true },
+    "@angular/common": { "optional": true },
+    "rxjs": { "optional": true }
   },
   "scripts": {
     "build": "tsup",
@@ -41,9 +72,15 @@
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
+    "@angular/common": "^17.3.0",
+    "@angular/core": "^17.3.0",
+    "@types/react": "^18.3.12",
+    "react": "^18.3.1",
+    "rxjs": "^7.8.1",
     "tsup": "^8.3.5",
     "typescript": "^5.6.3",
-    "vitest": "^3.2.4"
+    "vitest": "^3.2.4",
+    "vue": "^3.5.12"
   },
   "keywords": [
     "feedback",

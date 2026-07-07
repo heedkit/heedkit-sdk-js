@@ -5,7 +5,7 @@ import {
   type EndUser,
   type HeedKitConfig,
   type Theme,
-} from "@heedkit/sdk-js";
+} from "../index";
 
 export const HEEDKIT_CONFIG = new InjectionToken<HeedKitConfig>(
   "HEEDKIT_CONFIG",

@@ -15,8 +15,8 @@ import {
   type ShowCounts,
   type Theme,
   type Visibility,
-} from "@heedkit/sdk-js";
-import { mount, type MountOptions, type Widget } from "@heedkit/sdk-js";
+} from "./index";
+import { mount, type MountOptions, type Widget } from "./index";
 
 export {
   HeedKitClient,
