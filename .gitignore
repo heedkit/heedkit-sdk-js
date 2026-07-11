@@ -4,3 +4,4 @@ dist/
 .DS_Store
 *.log
 lib/
+.npmrc.publish
