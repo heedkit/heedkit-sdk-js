@@ -9,6 +9,7 @@ export type {
   InitResult,
   Interaction,
   KindInteractions,
+  ProjectConfig,
   ShowCounts,
   Theme,
   Visibility,

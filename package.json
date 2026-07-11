@@ -1,39 +1,19 @@
 {
-  "name": "@heedkit/sdk-js",
-  "version": "0.1.0",
-  "description": "HeedKit SDK \u2014 pure JavaScript. Zero dependencies. Works in any browser, script tag, or framework.",
-  "type": "module",
-  "main": "./dist/index.cjs",
-  "module": "./dist/index.js",
-  "types": "./dist/index.d.ts",
-  "unpkg": "./dist/heedkit.iife.js",
-  "jsdelivr": "./dist/heedkit.iife.js",
-  "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js",
-      "require": "./dist/index.cjs"
-    }
-  },
-  "files": [
-    "dist"
-  ],
+  "name": "heedkit-sdk-js",
+  "private": true,
+  "description": "HeedKit web SDKs — shared TypeScript core (@heedkit/sdk-js) + framework adapters",
   "scripts": {
-    "build": "tsup",
-    "dev": "tsup --watch",
-    "test": "vitest run"
+    "build": "pnpm -r --filter \"./packages/**\" build",
+    "test": "pnpm -r --filter \"./packages/**\" test",
+    "typecheck": "pnpm -r --filter \"./packages/**\" typecheck",
+    "clean": "pnpm -r exec rm -rf dist lib",
+    "changeset": "changeset",
+    "version": "changeset version",
+    "release": "pnpm build && changeset publish"
   },
   "devDependencies": {
-    "tsup": "^8.3.5",
-    "typescript": "^5.6.3",
-    "vitest": "^3.2.4"
+    "@changesets/cli": "^2.27.9",
+    "typescript": "^5.6.3"
   },
-  "keywords": [
-    "feedback",
-    "feature-request",
-    "voting",
-    "roadmap",
-    "sdk",
-    "vanilla-js"
-  ]
+  "packageManager": "pnpm@9.12.0"
 }
