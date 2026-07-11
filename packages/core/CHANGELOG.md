@@ -1,5 +1,13 @@
 # @heedkit/sdk-js
 
+## 0.2.2
+
+### Patch Changes
+
+- Ship the agent integration skill (`skills/heedkit-sdk-integration/SKILL.md`) inside the
+  published package so coding agents that install `@heedkit/sdk-js` can discover how to
+  integrate it. Docs/packaging only — no code changes.
+
 ## 0.2.1
 
 ### Patch Changes

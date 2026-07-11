@@ -1,6 +1,6 @@
 {
   "name": "@heedkit/sdk-js",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "HeedKit SDK — pure JavaScript. Zero dependencies. Works in any browser, script tag, or framework.",
   "license": "MIT",
   "author": "HeedKit",
@@ -42,7 +42,8 @@
     }
   },
   "files": [
-    "dist"
+    "dist",
+    "skills"
   ],
   "sideEffects": false,
   "engines": {
