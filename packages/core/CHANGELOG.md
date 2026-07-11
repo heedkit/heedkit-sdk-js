@@ -1,5 +1,13 @@
 # @heedkit/sdk-js
 
+## 0.2.1
+
+### Patch Changes
+
+- Add a comprehensive README (install, vanilla `mount()` widget, `<script>`/CDN usage, the
+  React/Vue/Angular subpath imports, user identity + HMAC, and the full `HeedKitClient` API).
+  Docs-only — no code changes.
+
 ## 0.2.0
 
 ### Minor Changes
