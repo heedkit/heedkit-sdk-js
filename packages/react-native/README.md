@@ -47,7 +47,7 @@ export default function App() {
 `<FeedbackButton />` renders a floating pill that opens the full feedback UI in a slide-up
 modal. That's the whole integration.
 
-> **`apiUrl` gotcha:** pass your HeedKit **origin**, without `/sdk` — the SDK appends `/sdk/...` itself, so `https://heedkit.com` double-stacks the path (`/sdk/sdk/init` → 404). Always set it explicitly (e.g. `https://heedkit.com`); the default (`https://api.heedkit.com`) doesn't currently serve the API.
+> **`apiUrl` gotcha:** pass your HeedKit **origin**, without `/sdk` — the SDK appends `/sdk/...` itself, so `https://heedkit.com/sdk` double-stacks the path (`/sdk/sdk/init` → 404). Always set it explicitly (e.g. `https://heedkit.com`); the default (`https://api.heedkit.com`) doesn't currently serve the API.
 
 ## Components
 
