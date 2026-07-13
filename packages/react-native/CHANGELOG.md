@@ -1,5 +1,13 @@
 # @heedkit/sdk-react-native
 
+## 0.1.4
+
+### Patch Changes
+
+- Add a README (install, `HeedKitProvider` + `FeedbackButton` quick start, `FeedbackScreen`,
+  `useHeedKit`, identity/HMAC, and the client API) so the npm package page documents how to
+  get started. Docs-only.
+
 ## 0.1.3
 
 ### Patch Changes
