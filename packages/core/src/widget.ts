@@ -76,7 +76,9 @@ const CSS = `
 }
 .fk-overlay *, .fk-overlay *::before, .fk-overlay *::after { box-sizing: border-box; margin: 0; }
 .fk-panel {
-  width: 100%; max-width: 520px; max-height: 85vh; display: flex; flex-direction: column;
+  /* FIXED height (not max-height): the panel must not jump when switching between
+     a full list, an empty tab, and the suggest form. The body scrolls internally. */
+  width: 100%; max-width: 520px; height: min(640px, 85vh); display: flex; flex-direction: column;
   background: var(--fh-bg); color: var(--fh-fg);
   border: 1px solid color-mix(in srgb, var(--fh-border) 60%, transparent);
   border-radius: calc(var(--fh-radius) + 6px); overflow: hidden;
@@ -119,9 +121,13 @@ const CSS = `
 }
 .fk-tab:hover { color: var(--fh-fg); border-color: var(--fh-border); }
 .fk-tab[data-active="true"] { background: var(--fh-primary); border-color: var(--fh-primary); color: #fff; }
-.fk-body { flex: 1; overflow-y: auto; padding: 14px 20px 18px; scrollbar-width: thin; }
-.fk-empty, .fk-loading { text-align: center; padding: 40px 20px; color: var(--fh-muted); }
+.fk-body {
+  flex: 1; overflow-y: auto; padding: 14px 20px 18px; scrollbar-width: thin;
+  display: flex; flex-direction: column;
+}
+.fk-empty, .fk-loading { text-align: center; padding: 20px; color: var(--fh-muted); margin: auto; }
 .fk-row {
+  flex-shrink: 0;
   display: flex; gap: 12px; padding: 12px 14px; margin-bottom: 8px;
   background: var(--fh-row); border: 1px solid transparent; border-radius: var(--fh-radius);
   transition: border-color .12s ease;
@@ -167,8 +173,12 @@ const CSS = `
 .fk-reply { display: flex; gap: 8px; margin-top: 8px; align-items: flex-end; }
 .fk-reply .fk-textarea { margin-top: 0; min-height: 44px; }
 .fk-reply .fk-submit { padding: 10px 16px; }
-.fk-form { display: flex; flex-direction: column; gap: 14px; }
+.fk-form { display: flex; flex-direction: column; gap: 14px; flex: 1; }
 .fk-label { font-size: calc(var(--fh-fs) - 1px); font-weight: 600; display: block; }
+/* The description field absorbs the panel's fixed height, so the suggest form
+   fills the same space a full browse list does. */
+.fk-grow { flex: 1; display: flex; flex-direction: column; }
+.fk-grow .fk-textarea { flex: 1; }
 .fk-input, .fk-textarea {
   width: 100%; padding: 10px 12px; margin-top: 6px;
   border-radius: calc(var(--fh-radius) - 2px);
@@ -641,7 +651,7 @@ function renderPanel(
     }) as HTMLInputElement;
     titleLabel.appendChild(titleInput);
 
-    const descLabel = el("label", { class: "fk-label" }, ["Description"]);
+    const descLabel = el("label", { class: "fk-label fk-grow" }, ["Description"]);
     const descInput = el("textarea", {
       class: "fk-textarea",
       placeholder: "Any extra context helps.",
