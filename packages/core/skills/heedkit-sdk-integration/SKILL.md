@@ -18,12 +18,13 @@ framework.
 From the user's HeedKit project **Integrations** page:
 
 1. **`projectKey`** — public key, format `fk_...`. Safe to ship to the browser.
-2. **`apiUrl`** — the API base, e.g. `https://heedkit.com/sdk`.
+2. **`apiUrl`** — the API base, e.g. `https://heedkit.com` (origin only — the SDK appends `/sdk/...`).
 
-⚠️ **`apiUrl` gotcha:** if omitted, the SDK defaults to `https://api.heedkit.com`. Most
-deployments serve the API at `https://<host>/sdk` instead — **always pass `apiUrl`
-explicitly** unless you've confirmed the default matches. Getting this wrong makes every
-call fail silently (the widget just won't load).
+⚠️ **`apiUrl` gotcha:** pass the HeedKit **origin only, never an `/sdk`-suffixed URL** —
+the SDK appends `/sdk/...` to it, so `apiUrl: "https://heedkit.com/sdk"` requests
+`/sdk/sdk/init` and every call 404s. And **always pass it explicitly**: the built-in
+default (`https://api.heedkit.com`) doesn't currently serve the API, so omitting it makes
+the widget silently fail to load. Correct value for HeedKit cloud: `https://heedkit.com`.
 
 ## Step 1 — install
 
@@ -49,14 +50,14 @@ is under `@heedkit/sdk-js/*` now.
 **Vanilla** — `mount()` injects a floating launcher into `document.body`:
 ```ts
 import { mount } from "@heedkit/sdk-js";
-const widget = mount({ projectKey: "fk_xxx", apiUrl: "https://heedkit.com/sdk" });
+const widget = mount({ projectKey: "fk_xxx", apiUrl: "https://heedkit.com" });
 // widget.open() / widget.close() / widget.destroy()
 ```
 
 **React:**
 ```tsx
 import { HeedKitProvider, FeedbackButton } from "@heedkit/sdk-js/react";
-<HeedKitProvider projectKey="fk_xxx" apiUrl="https://heedkit.com/sdk">
+<HeedKitProvider projectKey="fk_xxx" apiUrl="https://heedkit.com">
   <FeedbackButton label="Feedback" />
 </HeedKitProvider>
 ```
@@ -64,7 +65,7 @@ import { HeedKitProvider, FeedbackButton } from "@heedkit/sdk-js/react";
 **Vue 3:**
 ```ts
 import { createHeedKit } from "@heedkit/sdk-js/vue";
-app.use(createHeedKit({ projectKey: "fk_xxx", apiUrl: "https://heedkit.com/sdk" }));
+app.use(createHeedKit({ projectKey: "fk_xxx", apiUrl: "https://heedkit.com" }));
 // template: <FeedbackButton label="Feedback" />  (import from @heedkit/sdk-js/vue)
 ```
 
@@ -72,7 +73,7 @@ app.use(createHeedKit({ projectKey: "fk_xxx", apiUrl: "https://heedkit.com/sdk" 
 ```ts
 import { provideHeedKit } from "@heedkit/sdk-js/angular";
 bootstrapApplication(AppComponent, { providers: [
-  provideHeedKit({ projectKey: "fk_xxx", apiUrl: "https://heedkit.com/sdk" }),
+  provideHeedKit({ projectKey: "fk_xxx", apiUrl: "https://heedkit.com" }),
 ]});
 // template: <heedkit-button label="Feedback" />  (import FeedbackButtonComponent)
 ```
@@ -80,7 +81,7 @@ bootstrapApplication(AppComponent, { providers: [
 **`<script>` tag (no bundler):** `window.HeedKit` from the CDN bundle:
 ```html
 <script src="https://unpkg.com/@heedkit/sdk-js"></script>
-<script>HeedKit.mount({ projectKey: "fk_xxx", apiUrl: "https://heedkit.com/sdk" });</script>
+<script>HeedKit.mount({ projectKey: "fk_xxx", apiUrl: "https://heedkit.com" });</script>
 ```
 
 ## Step 4 — identify the user (recommended, not required)
@@ -119,7 +120,7 @@ replay the returned `identity` as the `X-HeedKit-Identity` header on later `/sdk
 Use `HeedKitClient` directly:
 ```ts
 import { HeedKitClient } from "@heedkit/sdk-js";
-const fk = new HeedKitClient({ projectKey: "fk_xxx", apiUrl: "https://heedkit.com/sdk" });
+const fk = new HeedKitClient({ projectKey: "fk_xxx", apiUrl: "https://heedkit.com" });
 await fk.init({ externalId: "user-123" });        // call first
 await fk.list({ status?, kind?, sort? });          // features (kind: feature_request|bug_report|improvement|appreciation|other; sort: top|new)
 await fk.submit({ title, description?, kind?, tag? });

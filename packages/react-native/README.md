@@ -23,7 +23,7 @@ npm i react react-native
 You need two values from your HeedKit project's **Integrations** page:
 
 - **`projectKey`** — your public key, `fk_...` (safe on the client).
-- **`apiUrl`** — your API base, e.g. `https://heedkit.com/sdk`.
+- **`apiUrl`** — your API base, e.g. `https://heedkit.com` (origin only — the SDK appends `/sdk/...`).
 
 Wrap your app in `HeedKitProvider`, then drop in `<FeedbackButton />`:
 
@@ -34,7 +34,7 @@ export default function App() {
   return (
     <HeedKitProvider
       projectKey="fk_xxx"
-      apiUrl="https://heedkit.com/sdk"
+      apiUrl="https://heedkit.com"
       user={{ externalId: "user-123", email: "ada@example.com" }}
     >
       {/* ...your app... */}
@@ -47,9 +47,7 @@ export default function App() {
 `<FeedbackButton />` renders a floating pill that opens the full feedback UI in a slide-up
 modal. That's the whole integration.
 
-> **`apiUrl` gotcha:** if omitted it defaults to `https://api.heedkit.com`. Most setups serve
-> the API at `https://<host>/sdk` — pass `apiUrl` explicitly, or the widget silently won't
-> load.
+> **`apiUrl` gotcha:** pass your HeedKit **origin**, without `/sdk` — the SDK appends `/sdk/...` itself, so `https://heedkit.com` double-stacks the path (`/sdk/sdk/init` → 404). Always set it explicitly (e.g. `https://heedkit.com`); the default (`https://api.heedkit.com`) doesn't currently serve the API.
 
 ## Components
 
@@ -103,7 +101,7 @@ compute an HMAC on your **backend** and pass it as `userHash` — never put your
 // userHash = HMAC_SHA256(projectSecret, externalId), computed server-side.
 <HeedKitProvider
   projectKey="fk_xxx"
-  apiUrl="https://heedkit.com/sdk"
+  apiUrl="https://heedkit.com"
   user={{ externalId: "user-123", email: "ada@example.com" /*, userHash */ }}
 >
 ```

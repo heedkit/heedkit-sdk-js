@@ -26,7 +26,7 @@ npm i @heedkit/sdk-js
 You need two things from your HeedKit project's **Integrations** page:
 
 - **`projectKey`** — your public key, e.g. `fk_xxx` (safe to ship to the browser).
-- **`apiUrl`** — your API base, e.g. `https://heedkit.com/sdk`.
+- **`apiUrl`** — your API base, e.g. `https://heedkit.com` (origin only — the SDK appends `/sdk/...`).
 
 ### Vanilla JS — drop-in widget
 
@@ -37,7 +37,7 @@ import { mount } from "@heedkit/sdk-js";
 
 const widget = mount({
   projectKey: "fk_xxx",
-  apiUrl: "https://heedkit.com/sdk",
+  apiUrl: "https://heedkit.com",
   user: { externalId: "user-123", email: "ada@example.com" },
   label: "Feedback",      // launcher text (default: "Feedback")
 });
@@ -55,7 +55,7 @@ A single IIFE bundle exposes `window.HeedKit`:
 ```html
 <script src="https://unpkg.com/@heedkit/sdk-js"></script>
 <script>
-  HeedKit.mount({ projectKey: "fk_xxx", apiUrl: "https://heedkit.com/sdk" });
+  HeedKit.mount({ projectKey: "fk_xxx", apiUrl: "https://heedkit.com" });
 </script>
 ```
 
@@ -74,7 +74,7 @@ function App() {
   return (
     <HeedKitProvider
       projectKey="fk_xxx"
-      apiUrl="https://heedkit.com/sdk"
+      apiUrl="https://heedkit.com"
       user={{ externalId: "user-123" }}
     >
       <FeedbackButton label="Feedback" />
@@ -98,7 +98,7 @@ import { createHeedKit } from "@heedkit/sdk-js/vue";
 import App from "./App.vue";
 
 createApp(App)
-  .use(createHeedKit({ projectKey: "fk_xxx", apiUrl: "https://heedkit.com/sdk" }))
+  .use(createHeedKit({ projectKey: "fk_xxx", apiUrl: "https://heedkit.com" }))
   .mount("#app");
 ```
 
@@ -121,7 +121,7 @@ import { AppComponent } from "./app.component";
 
 bootstrapApplication(AppComponent, {
   providers: [
-    provideHeedKit({ projectKey: "fk_xxx", apiUrl: "https://heedkit.com/sdk" }),
+    provideHeedKit({ projectKey: "fk_xxx", apiUrl: "https://heedkit.com" }),
   ],
 });
 ```
@@ -153,7 +153,7 @@ the project *secret* stays server-side.
 //   e.g. GET /heedkit/identity -> { externalId, userHash, name, email }
 
 const me = await (await fetch("/heedkit/identity")).json();
-const fk = new HeedKitClient({ projectKey: "fk_xxx", apiUrl: "https://heedkit.com/sdk" });
+const fk = new HeedKitClient({ projectKey: "fk_xxx", apiUrl: "https://heedkit.com" });
 await fk.init({ externalId: me.externalId, userHash: me.userHash, email: me.email });
 ```
 
@@ -175,7 +175,7 @@ bindings wrap):
 ```ts
 import { HeedKitClient } from "@heedkit/sdk-js";
 
-const fk = new HeedKitClient({ projectKey: "fk_xxx", apiUrl: "https://heedkit.com/sdk" });
+const fk = new HeedKitClient({ projectKey: "fk_xxx", apiUrl: "https://heedkit.com" });
 await fk.init({ externalId: "user-123" });
 ```
 
@@ -214,9 +214,7 @@ type MountOptions = HeedKitConfig & {
 };
 ```
 
-> **Heads up on `apiUrl`:** it defaults to `https://api.heedkit.com`. Most self-hosted /
-> standard setups serve the API at `https://<your-host>/sdk` — pass `apiUrl` explicitly to
-> match what your Integrations page shows.
+> **`apiUrl` gotcha:** pass your HeedKit **origin**, without `/sdk` — the SDK appends `/sdk/...` itself, so `https://heedkit.com` double-stacks the path (`/sdk/sdk/init` → 404). Always set it explicitly (e.g. `https://heedkit.com`); the default (`https://api.heedkit.com`) doesn't currently serve the API.
 
 ---
 
