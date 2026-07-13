@@ -142,18 +142,28 @@ export class AppComponent {}
 
 ## Identifying your users (recommended)
 
-Passing a `user` attributes feedback to a real person. To bind an identity securely,
-compute an HMAC signature **on your backend** (never expose your project *secret* to the
-browser) and pass it as `userHash`:
+Passing a `user` attributes feedback to a real person. A named identity must be
+**signed by your backend** — the API rejects any `externalId` that arrives without a
+valid `userHash` (`401 invalid_user_signature`). Never compute the hash in the browser;
+the project *secret* stays server-side.
 
 ```ts
-// userHash = HMAC_SHA256(projectSecret, externalId), computed server-side
+// On YOUR backend (authenticated route):
+//   userHash = lowercase_hex( HMAC_SHA256(projectSecret, externalId) )
+//   e.g. GET /heedkit/identity -> { externalId, userHash, name, email }
+
+const me = await (await fetch("/heedkit/identity")).json();
 const fk = new HeedKitClient({ projectKey: "fk_xxx", apiUrl: "https://heedkit.com/sdk" });
-await fk.init({ externalId: "user-123", email: "ada@example.com", /* userHash */ });
+await fk.init({ externalId: me.externalId, userHash: me.userHash, email: me.email });
 ```
 
-Anonymous usage also works — omit `user` and an anonymous end-user is created and
-remembered via `localStorage`.
+Self-check your backend hash: secret `fk_secret_test_0123456789abcdef` + externalId
+`user-42` must produce
+`4c630c032f4ff66a3e6379eca16cfc5fc40b231d6aeb1cd34c155efd3db54e7d`.
+
+Anonymous usage also works — omit `user` (or just `externalId`) and an anonymous
+end-user is created; its server-issued identity token is remembered via `localStorage`
+so votes stick to the same visitor across page loads.
 
 ---
 

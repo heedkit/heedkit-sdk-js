@@ -28,6 +28,10 @@ export type EndUser = {
   name?: string;
   avatarUrl?: string;
   platform?: string;
+  /// HMAC_SHA256(projectSecret, externalId) as lowercase hex, computed on YOUR backend.
+  /// Required whenever `externalId` is set — the API rejects unsigned ids with
+  /// 401 invalid_user_signature. Never compute this in the browser.
+  userHash?: string;
 };
 
 export type FeatureKind =
@@ -84,32 +88,47 @@ export type ProjectConfig = {
 
 export type InitResult = {
   end_user_id: string;
+  /// Signed replay token; sent as X-HeedKit-Identity on every later call. Optional so
+  /// responses from older deployments still parse.
+  identity?: string;
   project: ProjectConfig;
 };
 
 const DEFAULT_API = "https://api.heedkit.com";
-const DEVICE_ID_KEY = "heedkit.device_id";
 
-/**
- * Stable per-browser identifier persisted in localStorage. When the customer
- * doesn't pass `externalId`, we still want votes/submissions to stick to the
- * same EndUser across page loads — otherwise every refresh would create a new
- * anonymous account.
- *
- * Returns null on the server (SSR), so callers should fall back to a fresh id.
- */
-export function getOrCreateDeviceId(): string | null {
+// ---------------------------------------------------------------------------
+// Anonymous identity persistence. The API only binds a NAMED identity when the
+// backend signs it (user_hash), so anonymous continuity works by persisting the
+// server-issued identity token (not by inventing a device external_id — the API
+// rejects any unsigned external_id). Scoped per projectKey; best-effort only:
+// privacy mode / SSR simply yields a fresh anonymous user per init.
+// ---------------------------------------------------------------------------
+
+type StoredIdentity = { identity: string; init: InitResult };
+
+const identityStorageKey = (projectKey: string) => `heedkit.identity.${projectKey}`;
+
+function loadStoredIdentity(projectKey: string): StoredIdentity | null {
   try {
-    if (typeof window === "undefined" || !window.localStorage) return null;
-    const existing = window.localStorage.getItem(DEVICE_ID_KEY);
-    if (existing) return existing;
-    const next = "dev_" + (crypto?.randomUUID?.() ?? Math.random().toString(36).slice(2));
-    window.localStorage.setItem(DEVICE_ID_KEY, next);
-    return next;
+    const raw = globalThis.localStorage?.getItem(identityStorageKey(projectKey));
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as StoredIdentity;
+    return parsed?.identity && parsed?.init?.end_user_id ? parsed : null;
   } catch {
-    // Privacy mode / disabled storage — caller falls back to anonymous.
     return null;
   }
+}
+
+function saveStoredIdentity(projectKey: string, blob: StoredIdentity): void {
+  try {
+    globalThis.localStorage?.setItem(identityStorageKey(projectKey), JSON.stringify(blob));
+  } catch { /* privacy mode / SSR — continuity degrades gracefully */ }
+}
+
+function clearStoredIdentity(projectKey: string): void {
+  try {
+    globalThis.localStorage?.removeItem(identityStorageKey(projectKey));
+  } catch { /* ignore */ }
 }
 
 /// Map a raw API feature onto the SDK shape (the backend compacts null fields and
@@ -147,6 +166,10 @@ export class HeedKitClient {
   private apiUrl: string;
   private projectKey: string;
   private endUserId: string | null = null;
+  private identity: string | null = null;
+  /// True when `identity` came from localStorage rather than a live init — those can
+  /// be stale, so the first 401 triggers one fresh anonymous re-init + retry.
+  private identityRestored = false;
   private theme: Theme = {};
   private projectName = "";
   private enabledKinds: FeatureKind[] = [];
@@ -159,17 +182,48 @@ export class HeedKitClient {
   }
 
   async init(user: EndUser = {}): Promise<InitResult> {
-    // If the caller didn't pass an external_id, fall back to a stable
-    // per-browser device id so refreshes keep the same EndUser.
-    const externalId = user.externalId ?? getOrCreateDeviceId() ?? undefined;
-    const body = {
-      external_id: externalId,
+    if (!user.externalId) {
+      // Anonymous: reuse the persisted server-issued identity when we have one, so
+      // votes/submissions stick to the same EndUser across page loads.
+      const stored = loadStoredIdentity(this.projectKey);
+      if (stored) {
+        this.identity = stored.identity;
+        this.identityRestored = true;
+        this.hydrate(stored.init);
+        return stored.init;
+      }
+      const res = await this.initRequest(user); // no external_id sent
+      if (res.identity) saveStoredIdentity(this.projectKey, { identity: res.identity, init: res });
+      return res;
+    }
+
+    // Identified: always hit the API (profile sync); a named identity supersedes
+    // any persisted anonymous one.
+    clearStoredIdentity(this.projectKey);
+    return this.initRequest(user);
+  }
+
+  private async initRequest(user: EndUser): Promise<InitResult> {
+    const body: Record<string, unknown> = {
       email: user.email,
       name: user.name,
       avatar_url: user.avatarUrl,
       platform: user.platform || "web",
     };
+    if (user.externalId) {
+      // The API rejects an unsigned external_id (401 invalid_user_signature), so the
+      // id and its backend-computed HMAC travel together.
+      body.external_id = user.externalId;
+      body.user_hash = user.userHash;
+    }
     const res = await this.request<InitResult>("/sdk/init", "POST", body);
+    this.identity = res.identity ?? null;
+    this.identityRestored = false;
+    this.hydrate(res);
+    return res;
+  }
+
+  private hydrate(res: InitResult) {
     this.endUserId = res.end_user_id;
     // The Rails backend nests project config under `project`; tolerate a flat
     // response from older deployments too.
@@ -179,7 +233,6 @@ export class HeedKitClient {
     this.enabledKinds = p.enabled_kinds || [];
     this.kindVisibility = p.kind_visibility || {};
     this.kindInteractions = p.kind_interactions || {};
-    return res;
   }
 
   getTheme() { return this.theme; }
@@ -201,7 +254,8 @@ export class HeedKitClient {
     opts: { status?: string; kind?: FeatureKind; sort?: "top" | "new" } = {}
   ): Promise<Feature[]> {
     this.ensureInit();
-    const params = new URLSearchParams({ end_user_id: this.endUserId! });
+    // The caller is identified by the X-HeedKit-Identity header, not a param.
+    const params = new URLSearchParams();
     if (opts.status) params.set("status", opts.status);
     if (opts.kind) params.set("kind", opts.kind);
     if (opts.sort) params.set("sort", opts.sort);
@@ -219,7 +273,6 @@ export class HeedKitClient {
   }): Promise<Feature> {
     this.ensureInit();
     const res = await this.request<any>("/sdk/features", "POST", {
-      end_user_id: this.endUserId,
       title: input.title,
       description: input.description || "",
       tag: input.tag || null,
@@ -230,9 +283,7 @@ export class HeedKitClient {
 
   async vote(featureId: string): Promise<{ voted: boolean; vote_count: number }> {
     this.ensureInit();
-    return this.request(`/sdk/features/${featureId}/vote`, "POST", {
-      end_user_id: this.endUserId,
-    });
+    return this.request(`/sdk/features/${featureId}/vote`, "POST", {});
   }
 
   async listComments(featureId: string): Promise<Comment[]> {
@@ -243,10 +294,7 @@ export class HeedKitClient {
 
   async comment(featureId: string, body: string): Promise<Comment> {
     this.ensureInit();
-    const res = await this.request<any>(`/sdk/features/${featureId}/comments`, "POST", {
-      end_user_id: this.endUserId,
-      body,
-    });
+    const res = await this.request<any>(`/sdk/features/${featureId}/comments`, "POST", { body });
     return normalizeComment(res);
   }
 
@@ -254,16 +302,28 @@ export class HeedKitClient {
     if (!this.endUserId) throw new Error("HeedKit not initialized — call init() first");
   }
 
-  private async request<T>(path: string, method: string, body?: unknown): Promise<T> {
+  private async request<T>(path: string, method: string, body?: unknown, retried = false): Promise<T> {
+    const headers: Record<string, string> = {
+      "Content-Type": "application/json",
+      "X-Project-Key": this.projectKey,
+    };
+    if (this.identity) headers["X-HeedKit-Identity"] = this.identity;
     const res = await fetch(`${this.apiUrl}${path}`, {
       method,
-      headers: {
-        "Content-Type": "application/json",
-        "X-Project-Key": this.projectKey,
-      },
+      headers,
       body: body ? JSON.stringify(body) : undefined,
     });
     if (!res.ok) {
+      // A persisted anonymous identity can go stale. Recover once: drop it, mint a
+      // fresh anonymous identity, and replay the call. Never applies to /sdk/init
+      // itself or to live (non-restored) identities.
+      if (res.status === 401 && this.identityRestored && !retried && path !== "/sdk/init") {
+        clearStoredIdentity(this.projectKey);
+        this.identity = null;
+        this.identityRestored = false;
+        await this.init({});
+        return this.request(path, method, body, true);
+      }
       let detail = `HTTP ${res.status}`;
       try {
         const j = await res.json();
