@@ -85,19 +85,34 @@ bootstrapApplication(AppComponent, { providers: [
 
 ## Step 4 — identify the user (recommended, not required)
 
-Pass a `user` so feedback is attributed to a real person. To bind the identity **securely**,
-compute an HMAC on the **backend** and pass it as `userHash`:
+Pass a `user` so feedback is attributed to a real person. A named identity MUST be signed
+by the app's backend — the API rejects any `externalId` without a valid `userHash`
+(`401 invalid_user_signature`).
+
+1. **Backend** (authenticated route, e.g. `GET /heedkit/identity`):
+   `userHash = lowercase_hex(HMAC_SHA256(key = projectSecret, message = String(session.user.id)))`
+   → respond `{ externalId, userHash, name, email }`. Sign ONLY the session user's id —
+   never an id taken from request params.
+   Self-check: secret `fk_secret_test_0123456789abcdef` + externalId `user-42` must give
+   `4c630c032f4ff66a3e6379eca16cfc5fc40b231d6aeb1cd34c155efd3db54e7d`.
+2. **Frontend**: fetch that payload and pass it as the `user`:
 
 ```ts
-// SERVER-SIDE ONLY: userHash = HMAC_SHA256(projectSecret, externalId)
-// The project SECRET must never reach the browser. Expose only projectKey + the computed hash.
+const me = await (await fetch("/heedkit/identity")).json();
+await fk.init({ externalId: me.externalId, userHash: me.userHash, name: me.name, email: me.email });
+// or user={...same fields...} on HeedKitProvider / mount()
 ```
-Then include it in the config's `user` (with `externalId`, `email`, etc.). Omit `user`
-entirely for anonymous feedback — an anonymous end-user is created and remembered via
-`localStorage`.
+
+Omit `user` entirely for anonymous feedback — an anonymous end-user is created and its
+server-issued identity token is remembered via `localStorage`. Do NOT invent a device id
+as `externalId` for anonymous users; unsigned ids are rejected.
 
 **Never** put the project *secret* in client code. If you find yourself hardcoding a secret
 in the frontend, stop — the hash must be computed server-side.
+
+Requires `@heedkit/sdk-js` >= 0.3.0 (`userHash` support). On 0.2.x, call the wire API
+directly instead: `POST <apiUrl>/init` with `{external_id, user_hash, name, email}`, then
+replay the returned `identity` as the `X-HeedKit-Identity` header on later `/sdk/*` calls.
 
 ## Custom UI (skip the built-in widget)
 
