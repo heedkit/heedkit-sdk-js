@@ -1,5 +1,12 @@
 # @heedkit/sdk-react-native
 
+## 0.1.6
+
+### Patch Changes
+
+- Updated dependencies [d17687d]
+  - @heedkit/sdk-js@0.3.1
+
 ## 0.1.5
 
 ### Patch Changes
