@@ -3,6 +3,7 @@ import {
   ActivityIndicator,
   Appearance,
   FlatList,
+  Linking,
   Modal,
   Pressable,
   ScrollView,
@@ -314,6 +315,16 @@ export function FeedbackScreen({ onClose }: { onClose?: () => void }) {
           }}
         />
       )}
+
+      <Pressable
+        style={{ borderTopWidth: 1, borderColor: p.border, paddingVertical: 8, alignItems: "center" }}
+        onPress={() => Linking.openURL("https://heedkit.com/?ref=widget").catch(() => {})}
+        accessibilityRole="link"
+      >
+        <Text style={{ color: p.muted, fontSize: p.fs - 3 }}>
+          Powered by <Text style={{ fontWeight: "600" }}>HeedKit</Text>
+        </Text>
+      </Pressable>
     </View>
   );
 }
