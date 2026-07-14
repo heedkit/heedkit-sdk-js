@@ -1,6 +1,6 @@
 {
   "name": "@heedkit/sdk-react-native",
-  "version": "0.1.8",
+  "version": "0.1.9",
   "description": "HeedKit feedback widget — React Native bindings",
   "source": "src/index",
   "main": "./lib/commonjs/index.js",

@@ -1,5 +1,11 @@
 # @heedkit/sdk-react-native
 
+## 0.1.9
+
+### Patch Changes
+
+- e40ca49: FeedbackScreen shows a small "Powered by HeedKit" footer linking to heedkit.com.
+
 ## 0.1.8
 
 ### Patch Changes
