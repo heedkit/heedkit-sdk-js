@@ -217,6 +217,22 @@ const CSS = `
   box-shadow: 0 1px 2px rgba(0,0,0,.06), 0 2px 8px rgba(0,0,0,.04);
 }
 .fk-error { color: rgb(220,38,38); font-size: calc(var(--fh-fs) - 1px); }
+.fk-empty-cta {
+  display: inline-block; margin-top: 10px; border: 0; cursor: pointer; font-family: inherit;
+  background: color-mix(in srgb, var(--fh-primary) 10%, transparent);
+  color: var(--fh-primary); font-weight: 600; font-size: calc(var(--fh-fs) - 1px);
+  padding: 8px 16px; border-radius: 999px; line-height: 1.4;
+  transition: background .12s ease;
+}
+.fk-empty-cta:hover { background: color-mix(in srgb, var(--fh-primary) 18%, transparent); }
+.fk-foot { border-top: 1px solid var(--fh-border); padding: 7px 20px; text-align: center; flex-shrink: 0; }
+.fk-brand {
+  color: var(--fh-muted); text-decoration: none;
+  font-size: calc(var(--fh-fs) - 3px); letter-spacing: .01em;
+  transition: color .12s ease;
+}
+.fk-brand strong { font-weight: 600; }
+.fk-brand:hover { color: var(--fh-fg); }
 `;
 
 function injectStyles() {
@@ -431,6 +447,16 @@ function renderPanel(
   const body = el("div", { class: "fk-body" });
   panel.appendChild(body);
 
+  // -- footer (branding) --------------------------------------------------
+  const foot = el("div", { class: "fk-foot" });
+  foot.appendChild(el("a", {
+    class: "fk-brand",
+    href: "https://heedkit.com/?ref=widget",
+    target: "_blank",
+    rel: "noopener noreferrer",
+  }, ["Powered by ", el("strong", {}, ["HeedKit"])]));
+  panel.appendChild(foot);
+
   // -- helpers ----------------------------------------------------------
 
   function paintModes() {
@@ -515,9 +541,16 @@ function renderPanel(
   }
 
   function renderList() {
-    body.innerHTML = "";
+    body.replaceChildren();
     if (features.length === 0) {
-      body.appendChild(el("div", { class: "fk-empty" }, ["No items yet — be the first!"]));
+      const cta = el("button", { class: "fk-empty-cta", type: "button" }, [
+        "Suggest one →",
+      ]) as HTMLButtonElement;
+      cta.addEventListener("click", () => setMode("suggest"));
+      body.appendChild(el("div", { class: "fk-empty" }, [
+        el("div", {}, ["No items yet — be the first!"]),
+        cta,
+      ]));
       return;
     }
     for (const f of features) {
