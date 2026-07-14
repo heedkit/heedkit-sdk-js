@@ -1,5 +1,13 @@
 # @heedkit/sdk-js
 
+## 0.3.3
+
+### Patch Changes
+
+- 2c5a2c4: Empty browse states now include a "Suggest one →" button that jumps to the
+  suggest form, and the panel shows a small "Powered by HeedKit" footer linking
+  to heedkit.com.
+
 ## 0.3.2
 
 ### Patch Changes
