@@ -225,6 +225,13 @@ const CSS = `
   transition: background .12s ease;
 }
 .fk-empty-cta:hover { background: color-mix(in srgb, var(--fh-primary) 18%, transparent); }
+.fk-list-cta {
+  border: 0; background: none; cursor: pointer; font-family: inherit;
+  align-self: center; flex-shrink: 0; margin: 2px 0 4px; padding: 6px 10px;
+  color: var(--fh-muted); font-weight: 500; font-size: calc(var(--fh-fs) - 2px); line-height: 1.4;
+  transition: color .12s ease;
+}
+.fk-list-cta:hover { color: var(--fh-primary); }
 .fk-foot { border-top: 1px solid var(--fh-border); padding: 7px 20px; text-align: center; flex-shrink: 0; }
 .fk-brand {
   color: var(--fh-muted); text-decoration: none;
@@ -556,6 +563,12 @@ function renderPanel(
     for (const f of features) {
       body.appendChild(renderRow(f));
     }
+    // Quiet end-of-list nudge; the loud pill version lives in the empty state.
+    const more = el("button", { class: "fk-list-cta", type: "button" }, [
+      "Suggest one →",
+    ]) as HTMLButtonElement;
+    more.addEventListener("click", () => setMode("suggest"));
+    body.appendChild(more);
   }
 
   // A row collapses by default; clicking the meta column reveals comments.
