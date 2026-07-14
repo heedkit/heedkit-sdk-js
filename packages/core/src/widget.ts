@@ -653,7 +653,10 @@ function renderPanel(
     const safeOptions = enabledOptions.length > 0 ? enabledOptions : [
       { value: "other" as FeatureKind, ...KIND_OPTIONS.other },
     ];
-    let kind: FeatureKind = safeOptions[0].value;
+    // Inherit the kind the user was browsing (e.g. filtered to Appreciation, then hit
+    // "Suggest one") so the form doesn't silently default back to the first kind.
+    const inherited = safeOptions.find((o) => o.value === activeKind);
+    let kind: FeatureKind = (inherited ?? safeOptions[0]).value;
 
     const form = el("form", { class: "fk-form" }) as HTMLFormElement;
 
@@ -679,7 +682,7 @@ function renderPanel(
     const titleInput = el("input", {
       class: "fk-input",
       type: "text",
-      placeholder: safeOptions[0].placeholder,
+      placeholder: (inherited ?? safeOptions[0]).placeholder,
       required: "true",
     }) as HTMLInputElement;
     titleLabel.appendChild(titleInput);
