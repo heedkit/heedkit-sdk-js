@@ -1,5 +1,11 @@
 # @heedkit/sdk-js
 
+## 0.3.4
+
+### Patch Changes
+
+- 5216765: The Suggest form now inherits the kind the user was browsing — filtering to e.g. Appreciation and hitting "Suggest one →" (or the Suggest tab) preselects Appreciation instead of silently defaulting back to Features.
+
 ## 0.3.3
 
 ### Patch Changes
