@@ -6,7 +6,7 @@ your public roadmap and changelog.
 
 Unlike a web wrapper, this is a **native UI** built from React Native primitives (`Modal`,
 `View`, `Pressable`, …) — it renders properly in your app, adapts to light/dark, and picks up
-your project's theme. It reuses the shared HeedKit client for data/identity.
+your workspace's theme. It reuses the shared HeedKit client for data/identity.
 
 - 🟦 TypeScript — full types included
 - 📱 Native components, not a WebView
@@ -20,9 +20,9 @@ npm i react react-native
 
 ## Quick start
 
-You need two values from your HeedKit project's **Integrations** page:
+You need two values from your HeedKit workspace's **Integrations** page:
 
-- **`projectKey`** — your public key, `fk_...` (safe on the client).
+- **`workspaceKey`** — your public key, `fk_...` (safe on the client).
 - **`apiUrl`** — your API base, e.g. `https://heedkit.com` (origin only — the SDK appends `/sdk/...`).
 
 Wrap your app in `HeedKitProvider`, then drop in `<FeedbackButton />`:
@@ -33,7 +33,7 @@ import { HeedKitProvider, FeedbackButton } from "@heedkit/sdk-react-native";
 export default function App() {
   return (
     <HeedKitProvider
-      projectKey="fk_xxx"
+      workspaceKey="fk_xxx"
       apiUrl="https://heedkit.com"
       user={{ externalId: "user-123", email: "ada@example.com" }}
     >
@@ -53,7 +53,7 @@ modal. That's the whole integration.
 
 ### `<HeedKitProvider>`
 
-Initializes the client and provides it to the tree. Props are `projectKey`, `apiUrl?`,
+Initializes the client and provides it to the tree. Props are `workspaceKey`, `apiUrl?`,
 `user?` (see [Identity](#identifying-your-users)), plus `children`. `platform` is set to
 `"react-native"` automatically.
 
@@ -94,13 +94,13 @@ function MyComponent() {
 ## Identifying your users
 
 Passing a `user` attributes feedback to a real person. To bind the identity **securely**,
-compute an HMAC on your **backend** and pass it as `userHash` — never put your project
+compute an HMAC on your **backend** and pass it as `userHash` — never put your workspace
 *secret* in the app:
 
 ```tsx
-// userHash = HMAC_SHA256(projectSecret, externalId), computed server-side.
+// userHash = HMAC_SHA256(serverSecret, externalId), computed server-side.
 <HeedKitProvider
-  projectKey="fk_xxx"
+  workspaceKey="fk_xxx"
   apiUrl="https://heedkit.com"
   user={{ externalId: "user-123", email: "ada@example.com" /*, userHash */ }}
 >

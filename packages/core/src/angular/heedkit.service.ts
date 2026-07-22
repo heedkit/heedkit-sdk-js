@@ -19,13 +19,13 @@ export class HeedKitService {
 
   // Persisted on the service so the button component can re-mount the shared
   // JS widget without reaching into the client's private fields.
-  readonly projectKey: string;
+  readonly workspaceKey: string;
   readonly apiUrl: string | undefined;
   readonly user: EndUser | undefined;
 
   constructor(@Inject(HEEDKIT_CONFIG) cfg: HeedKitConfig) {
     this.client = new HeedKitClient(cfg);
-    this.projectKey = cfg.projectKey;
+    this.workspaceKey = cfg.workspaceKey;
     this.apiUrl = cfg.apiUrl;
     this.user = cfg.user;
     this.client.init(cfg.user || {}).then(() => {

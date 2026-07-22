@@ -79,12 +79,12 @@ type Ctx = { client: HeedKitClient; ready: boolean; theme: Theme };
 const HeedKitContext = React.createContext<Ctx | null>(null);
 
 export function HeedKitProvider({
-  projectKey,
+  workspaceKey,
   apiUrl,
   user,
   children,
 }: { children: React.ReactNode } & HeedKitConfig) {
-  const [client] = React.useState(() => new HeedKitClient({ projectKey, apiUrl, user }));
+  const [client] = React.useState(() => new HeedKitClient({ workspaceKey, apiUrl, user }));
   const [ready, setReady] = React.useState(false);
   const [theme, setTheme] = React.useState<Theme>({});
 
@@ -229,7 +229,7 @@ export function FeedbackScreen({ onClose }: { onClose?: () => void }) {
     <View style={[styles.container, { backgroundColor: p.bg }]}>
       <View style={[styles.header, { borderColor: p.border }]}>
         <Text style={[styles.title, { color: p.fg, fontSize: p.fs + 6 }]}>
-          {ctx.client.getProjectName() || "Feedback"}
+          {ctx.client.getWorkspaceName() || "Feedback"}
         </Text>
         {onClose && (
           <Pressable onPress={onClose}>

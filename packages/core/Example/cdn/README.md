@@ -13,9 +13,9 @@ lower-level `HeedKitClient`, see the Vite demo in the parent folder
 
 1. Run the Rails backend: `cd heedkit-rails && bin/dev` (port 3000).
 2. Edit `index.html`:
-   - `projectKey` → your `pk_...` key from the console Install page.
+   - `workspaceKey` → your `pk_...` key from the console Install page.
    - `apiUrl` → the Rails origin. Browser dev default is
      `http://heedkit.localhost:3000`. Use `http://localhost:3000` for an
      iOS simulator and `http://10.0.2.2:3000` for an Android emulator.
 
-The SDK appends `/sdk` to `apiUrl` and sends `X-Project-Key` on every request.
+The SDK appends `/sdk` to `apiUrl` and sends `X-Workspace-Key` on every request.

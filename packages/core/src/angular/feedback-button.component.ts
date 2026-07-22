@@ -25,7 +25,7 @@ export class FeedbackButtonComponent implements OnInit, OnDestroy {
     effect(() => {
       if (this.svc.ready() && !this.widget) {
         this.widget = mount({
-          projectKey: this.svc.projectKey,
+          workspaceKey: this.svc.workspaceKey,
           apiUrl: this.svc.apiUrl,
           user: this.svc.user,
           label: this.label,

@@ -330,7 +330,7 @@ export function mount(options: MountOptions): Widget {
   const container = options.container || document.body;
   const client = new HeedKitClient(options);
 
-  // Silence init failures (bad project key, network down, API offline) so
+  // Silence init failures (bad workspace key, network down, API offline) so
   // they don't surface as unhandled promise rejections in the host page —
   // a marketing visitor should never see a Next.js error overlay because
   // our init 401'd. The launcher just doesn't show; open() no-ops.
@@ -411,7 +411,7 @@ function renderPanel(
   // -- header -----------------------------------------------------------
   const head = el("div", { class: "fk-head" });
   const titlerow = el("div", { class: "fk-titlerow" });
-  titlerow.appendChild(el("div", { class: "fk-title" }, [client.getProjectName() || "Feedback"]));
+  titlerow.appendChild(el("div", { class: "fk-title" }, [client.getWorkspaceName() || "Feedback"]));
   const closeBtn = el("button", { class: "fk-close", type: "button", "aria-label": "Close" }, ["×"]);
   closeBtn.addEventListener("click", onClose);
   titlerow.appendChild(closeBtn);

@@ -81,3 +81,9 @@
   The former standalone `@heedkit/sdk-react`, `@heedkit/sdk-vue`, and `@heedkit/sdk-angular`
   packages are superseded. Frameworks are optional peer dependencies, so plain-JS usage is
   unaffected. No breaking changes to the existing `@heedkit/sdk-js` entry.
+# 0.4.0
+
+- Breaking: replace the Project API with Workspace terminology (`workspaceKey`,
+  `WorkspaceConfig`, `InitResult.workspace`, and `getWorkspaceName()`).
+- Send `X-Workspace-Key` and migrate cached init configuration without changing
+  the persisted identity-storage key.

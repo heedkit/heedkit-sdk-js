@@ -28,7 +28,7 @@ export type EndUser = {
   name?: string;
   avatarUrl?: string;
   platform?: string;
-  /// HMAC_SHA256(projectSecret, externalId) as lowercase hex, computed on YOUR backend.
+  /// HMAC_SHA256(serverSecret, externalId) as lowercase hex, computed on YOUR backend.
   /// Required whenever `externalId` is set — the API rejects unsigned ids with
   /// 401 invalid_user_signature. Never compute this in the browser.
   userHash?: string;
@@ -47,9 +47,9 @@ export type Feature = {
   description: string;
   status: "open" | "planned" | "in_progress" | "shipped" | "declined";
   kind: FeatureKind;
-  /// Whether the item is visible beyond its author + the project team.
+  /// Whether the item is visible beyond its author + the workspace team.
   visibility: Visibility;
-  /// Whether the item appears on the project's roadmap (public if visibility=public).
+  /// Whether the item appears on the workspace's roadmap (public if visibility=public).
   on_roadmap: boolean;
   tag: string | null;
   vote_count: number;
@@ -68,13 +68,13 @@ export type Comment = {
 };
 
 export type HeedKitConfig = {
-  projectKey: string;
+  workspaceKey: string;
   apiUrl?: string;
   user?: EndUser;
 };
 
-/// Project configuration returned by /sdk/init (nested under `project`).
-export type ProjectConfig = {
+/// Workspace configuration returned by /sdk/init (nested under `workspace`).
+export type WorkspaceConfig = {
   name: string;
   theme: Theme;
   enabled_kinds: FeatureKind[];
@@ -91,7 +91,7 @@ export type InitResult = {
   /// Signed replay token; sent as X-HeedKit-Identity on every later call. Optional so
   /// responses from older deployments still parse.
   identity?: string;
-  project: ProjectConfig;
+  workspace: WorkspaceConfig;
 };
 
 const DEFAULT_API = "https://api.heedkit.com";
@@ -100,17 +100,17 @@ const DEFAULT_API = "https://api.heedkit.com";
 // Anonymous identity persistence. The API only binds a NAMED identity when the
 // backend signs it (user_hash), so anonymous continuity works by persisting the
 // server-issued identity token (not by inventing a device external_id — the API
-// rejects any unsigned external_id). Scoped per projectKey; best-effort only:
+// rejects any unsigned external_id). Scoped per workspaceKey; best-effort only:
 // privacy mode / SSR simply yields a fresh anonymous user per init.
 // ---------------------------------------------------------------------------
 
 type StoredIdentity = { identity: string; init: InitResult };
 
-const identityStorageKey = (projectKey: string) => `heedkit.identity.${projectKey}`;
+const identityStorageKey = (workspaceKey: string) => `heedkit.identity.${workspaceKey}`;
 
-function loadStoredIdentity(projectKey: string): StoredIdentity | null {
+function loadStoredIdentity(workspaceKey: string): StoredIdentity | null {
   try {
-    const raw = globalThis.localStorage?.getItem(identityStorageKey(projectKey));
+    const raw = globalThis.localStorage?.getItem(identityStorageKey(workspaceKey));
     if (!raw) return null;
     const parsed = JSON.parse(raw) as StoredIdentity;
     return parsed?.identity && parsed?.init?.end_user_id ? parsed : null;
@@ -119,15 +119,15 @@ function loadStoredIdentity(projectKey: string): StoredIdentity | null {
   }
 }
 
-function saveStoredIdentity(projectKey: string, blob: StoredIdentity): void {
+function saveStoredIdentity(workspaceKey: string, blob: StoredIdentity): void {
   try {
-    globalThis.localStorage?.setItem(identityStorageKey(projectKey), JSON.stringify(blob));
+    globalThis.localStorage?.setItem(identityStorageKey(workspaceKey), JSON.stringify(blob));
   } catch { /* privacy mode / SSR — continuity degrades gracefully */ }
 }
 
-function clearStoredIdentity(projectKey: string): void {
+function clearStoredIdentity(workspaceKey: string): void {
   try {
-    globalThis.localStorage?.removeItem(identityStorageKey(projectKey));
+    globalThis.localStorage?.removeItem(identityStorageKey(workspaceKey));
   } catch { /* ignore */ }
 }
 
@@ -164,42 +164,51 @@ function normalizeComment(c: any): Comment {
 
 export class HeedKitClient {
   private apiUrl: string;
-  private projectKey: string;
+  private workspaceKey: string;
   private endUserId: string | null = null;
   private identity: string | null = null;
   /// True when `identity` came from localStorage rather than a live init — those can
   /// be stale, so the first 401 triggers one fresh anonymous re-init + retry.
   private identityRestored = false;
   private theme: Theme = {};
-  private projectName = "";
+  private workspaceName = "";
   private enabledKinds: FeatureKind[] = [];
   private kindVisibility: Partial<Record<FeatureKind, Visibility>> = {};
   private kindInteractions: Partial<Record<FeatureKind, KindInteractions>> = {};
 
   constructor(config: HeedKitConfig) {
     this.apiUrl = config.apiUrl || DEFAULT_API;
-    this.projectKey = config.projectKey;
+    this.workspaceKey = config.workspaceKey;
   }
 
   async init(user: EndUser = {}): Promise<InitResult> {
     if (!user.externalId) {
       // Anonymous: reuse the persisted server-issued identity when we have one, so
       // votes/submissions stick to the same EndUser across page loads.
-      const stored = loadStoredIdentity(this.projectKey);
-      if (stored) {
+      const stored = loadStoredIdentity(this.workspaceKey);
+      if (stored?.init?.workspace) {
         this.identity = stored.identity;
         this.identityRestored = true;
         this.hydrate(stored.init);
         return stored.init;
       }
+      // A pre-0.4 cached payload lacks `workspace`. Preserve its identity token, fetch
+      // the Workspace-shaped config live, and replace the cache entry.
+      if (stored) {
+        this.identity = stored.identity;
+        this.identityRestored = true;
+        const res = await this.initRequest(user);
+        if (res.identity) saveStoredIdentity(this.workspaceKey, { identity: res.identity, init: res });
+        return res;
+      }
       const res = await this.initRequest(user); // no external_id sent
-      if (res.identity) saveStoredIdentity(this.projectKey, { identity: res.identity, init: res });
+      if (res.identity) saveStoredIdentity(this.workspaceKey, { identity: res.identity, init: res });
       return res;
     }
 
     // Identified: always hit the API (profile sync); a named identity supersedes
     // any persisted anonymous one.
-    clearStoredIdentity(this.projectKey);
+    clearStoredIdentity(this.workspaceKey);
     return this.initRequest(user);
   }
 
@@ -225,21 +234,19 @@ export class HeedKitClient {
 
   private hydrate(res: InitResult) {
     this.endUserId = res.end_user_id;
-    // The Rails backend nests project config under `project`; tolerate a flat
-    // response from older deployments too.
-    const p: any = (res as any).project ?? res;
-    this.theme = p.theme || {};
-    this.projectName = p.name ?? p.project_name ?? "";
-    this.enabledKinds = p.enabled_kinds || [];
-    this.kindVisibility = p.kind_visibility || {};
-    this.kindInteractions = p.kind_interactions || {};
+    const workspace = res.workspace;
+    this.theme = workspace.theme || {};
+    this.workspaceName = workspace.name || "";
+    this.enabledKinds = workspace.enabled_kinds || [];
+    this.kindVisibility = workspace.kind_visibility || {};
+    this.kindInteractions = workspace.kind_interactions || {};
   }
 
   getTheme() { return this.theme; }
   getEnabledKinds(): FeatureKind[] { return this.enabledKinds; }
   getKindVisibility() { return this.kindVisibility; }
   getKindInteractions() { return this.kindInteractions; }
-  getProjectName() { return this.projectName; }
+  getWorkspaceName() { return this.workspaceName; }
   getEndUserId() { return this.endUserId; }
 
   /// Convenience: which interactions are enabled for a given kind, in stable order.
@@ -305,7 +312,7 @@ export class HeedKitClient {
   private async request<T>(path: string, method: string, body?: unknown, retried = false): Promise<T> {
     const headers: Record<string, string> = {
       "Content-Type": "application/json",
-      "X-Project-Key": this.projectKey,
+      "X-Workspace-Key": this.workspaceKey,
     };
     if (this.identity) headers["X-HeedKit-Identity"] = this.identity;
     const res = await fetch(`${this.apiUrl}${path}`, {
@@ -318,7 +325,7 @@ export class HeedKitClient {
       // fresh anonymous identity, and replay the call. Never applies to /sdk/init
       // itself or to live (non-restored) identities.
       if (res.status === 401 && this.identityRestored && !retried && path !== "/sdk/init") {
-        clearStoredIdentity(this.projectKey);
+        clearStoredIdentity(this.workspaceKey);
         this.identity = null;
         this.identityRestored = false;
         await this.init({});

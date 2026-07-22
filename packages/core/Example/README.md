@@ -6,7 +6,7 @@ from `../src`, not a published package).
 
 It demonstrates:
 
-1. Configure the SDK with a project key + Rails endpoint.
+1. Configure the SDK with a workspace key + Rails endpoint.
 2. Init / identify an end-user — `client.init(...)` → `POST /sdk/init`.
 3. Fetch & display the roadmap/feedback list — `client.list(...)` → `GET /sdk/features`.
 4. Submit a new feature — `client.submit(...)` → `POST /sdk/features`.
@@ -25,7 +25,7 @@ invented and nothing here calls the Rails endpoints directly.
    bin/dev          # serves on port 3000
    ```
 
-2. **Get a project key.** Open the HeedKit console **Install** page, or use
+2. **Get a workspace key.** Open the HeedKit console **Install** page, or use
    the key seeded by `db/seeds` for the demo `heedkit` / `demo` workspace.
    It looks like `pk_...`. Never hardcode a real key into committed files.
 
@@ -36,12 +36,12 @@ Either edit the `CONFIG` constant at the top of `main.ts`, or create a
 
 ```bash
 cp .env.example .env.local
-# then set VITE_HEEDKIT_PROJECT_KEY=pk_your_key
+# then set VITE_HEEDKIT_WORKSPACE_KEY=pk_your_key
 ```
 
 | Var | Default | Notes |
 | --- | --- | --- |
-| `VITE_HEEDKIT_PROJECT_KEY` | `pk_REPLACE_ME` | Public project key. |
+| `VITE_HEEDKIT_WORKSPACE_KEY` | `pk_REPLACE_ME` | Public workspace key. |
 | `VITE_HEEDKIT_API_URL` | `http://heedkit.localhost:3000` | Bare origin; the SDK appends `/sdk`. |
 
 ## Run
@@ -52,7 +52,7 @@ npm run dev
 # open the printed URL (http://localhost:5173)
 ```
 
-`X-Project-Key` is attached to every request by the SDK. CORS is open on the
+`X-Workspace-Key` is attached to every request by the SDK. CORS is open on the
 Rails side, so the browser demo works cross-origin.
 
 ## Endpoint / host notes

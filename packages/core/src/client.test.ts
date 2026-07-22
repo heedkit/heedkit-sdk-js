@@ -27,11 +27,11 @@ function jsonResponse(body: unknown, status = 200): Response {
   });
 }
 
-// The Rails /sdk/init response nests project config under `project`.
+// The Rails /sdk/init response nests workspace config under `workspace`.
 const FULL_INIT_RESPONSE: InitResult = {
   end_user_id: "eu-alice",
   identity: "idtok-1",
-  project: {
+  workspace: {
     name: "Test",
     theme: { primary: "#000000" },
     enabled_kinds: ["feature_request", "bug_report", "improvement", "appreciation", "other"],
@@ -81,9 +81,9 @@ function stubLocalStorage() {
 // ---------------------------------------------------------------------------
 
 describe("HeedKitClient.init", () => {
-  it("posts identity to /sdk/init with the project key header", async () => {
+  it("posts identity to /sdk/init with the workspace key header", async () => {
     const { calls } = mockFetch(() => jsonResponse(FULL_INIT_RESPONSE));
-    const client = new HeedKitClient({ projectKey: "fh_test", apiUrl: "http://api" });
+    const client = new HeedKitClient({ workspaceKey: "fh_test", apiUrl: "http://api" });
 
     await client.init({ externalId: "alice", email: "alice@x.com", platform: "tests" });
 
@@ -93,7 +93,7 @@ describe("HeedKitClient.init", () => {
     expect(init.method).toBe("POST");
     // init.headers may be a Headers instance OR a plain object depending on the runtime.
     const headers = new Headers(init.headers as HeadersInit);
-    expect(headers.get("X-Project-Key")).toBe("fh_test");
+    expect(headers.get("X-Workspace-Key")).toBe("fh_test");
     expect(headers.get("Content-Type")).toBe("application/json");
     expect(JSON.parse(init.body as string)).toEqual({
       external_id: "alice",
@@ -106,7 +106,7 @@ describe("HeedKitClient.init", () => {
 
   it("defaults platform to 'web' when no user is provided", async () => {
     const { calls } = mockFetch(() => jsonResponse(FULL_INIT_RESPONSE));
-    const client = new HeedKitClient({ projectKey: "fh_test", apiUrl: "http://api" });
+    const client = new HeedKitClient({ workspaceKey: "fh_test", apiUrl: "http://api" });
     await client.init();
     const body = JSON.parse(calls[0].init!.body as string);
     expect(body.platform).toBe("web");
@@ -114,7 +114,7 @@ describe("HeedKitClient.init", () => {
 
   it("sends user_hash alongside external_id for verified identity", async () => {
     const { calls } = mockFetch(() => jsonResponse(FULL_INIT_RESPONSE));
-    const client = new HeedKitClient({ projectKey: "fh_test", apiUrl: "http://api" });
+    const client = new HeedKitClient({ workspaceKey: "fh_test", apiUrl: "http://api" });
     await client.init({ externalId: "alice", userHash: "abc123" });
     const body = JSON.parse(calls[0].init!.body as string);
     expect(body.external_id).toBe("alice");
@@ -123,7 +123,7 @@ describe("HeedKitClient.init", () => {
 
   it("anonymous init sends NO external_id (the backend rejects unsigned ids)", async () => {
     const { calls } = mockFetch(() => jsonResponse(FULL_INIT_RESPONSE));
-    const client = new HeedKitClient({ projectKey: "fh_test", apiUrl: "http://api" });
+    const client = new HeedKitClient({ workspaceKey: "fh_test", apiUrl: "http://api" });
     await client.init();
     const body = JSON.parse(calls[0].init!.body as string);
     expect("external_id" in body).toBe(false);
@@ -135,7 +135,7 @@ describe("HeedKitClient.init", () => {
       if (call.url.includes("/vote")) return jsonResponse({ voted: true, vote_count: 1 });
       return jsonResponse(FULL_INIT_RESPONSE);
     });
-    const client = new HeedKitClient({ projectKey: "fh_test", apiUrl: "http://api" });
+    const client = new HeedKitClient({ workspaceKey: "fh_test", apiUrl: "http://api" });
     await client.init({ externalId: "alice", userHash: "abc123" });
     await client.vote("7");
     const voteHeaders = new Headers(calls[1].init!.headers as HeadersInit);
@@ -155,15 +155,15 @@ describe("anonymous identity persistence", () => {
       return jsonResponse(FULL_INIT_RESPONSE);
     });
 
-    const first = new HeedKitClient({ projectKey: "fh_test", apiUrl: "http://api" });
+    const first = new HeedKitClient({ workspaceKey: "fh_test", apiUrl: "http://api" });
     await first.init();
     expect(calls).toHaveLength(1); // network init, persisted
 
-    const second = new HeedKitClient({ projectKey: "fh_test", apiUrl: "http://api" });
+    const second = new HeedKitClient({ workspaceKey: "fh_test", apiUrl: "http://api" });
     await second.init();
     expect(calls).toHaveLength(1); // hydrated from storage — no second init
     expect(second.getEndUserId()).toBe("eu-alice");
-    expect(second.getProjectName()).toBe("Test");
+    expect(second.getWorkspaceName()).toBe("Test");
 
     await second.vote("7");
     const voteHeaders = new Headers(calls[1].init!.headers as HeadersInit);
@@ -174,11 +174,11 @@ describe("anonymous identity persistence", () => {
     const store = stubLocalStorage();
     mockFetch(() => jsonResponse(FULL_INIT_RESPONSE));
 
-    const anon = new HeedKitClient({ projectKey: "fh_test", apiUrl: "http://api" });
+    const anon = new HeedKitClient({ workspaceKey: "fh_test", apiUrl: "http://api" });
     await anon.init();
     expect(store.size).toBe(1);
 
-    const identified = new HeedKitClient({ projectKey: "fh_test", apiUrl: "http://api" });
+    const identified = new HeedKitClient({ workspaceKey: "fh_test", apiUrl: "http://api" });
     await identified.init({ externalId: "alice", userHash: "abc123" });
     expect(store.size).toBe(0);
   });
@@ -195,10 +195,10 @@ describe("anonymous identity persistence", () => {
       return jsonResponse({ ...FULL_INIT_RESPONSE, identity: `idtok-${calls.length + 1}` });
     });
 
-    const first = new HeedKitClient({ projectKey: "fh_test", apiUrl: "http://api" });
+    const first = new HeedKitClient({ workspaceKey: "fh_test", apiUrl: "http://api" });
     await first.init(); // network init #1, persisted
 
-    const second = new HeedKitClient({ projectKey: "fh_test", apiUrl: "http://api" });
+    const second = new HeedKitClient({ workspaceKey: "fh_test", apiUrl: "http://api" });
     await second.init(); // restored from storage
     const out = await second.vote("7"); // 401 -> re-init -> retry -> ok
     expect(out).toEqual({ voted: true, vote_count: 1 });
@@ -210,12 +210,12 @@ describe("anonymous identity persistence", () => {
 
   it("hydrates theme / enabledKinds / kindVisibility / kindInteractions / endUserId", async () => {
     mockFetch(() => jsonResponse(FULL_INIT_RESPONSE));
-    const client = new HeedKitClient({ projectKey: "fh_test", apiUrl: "http://api" });
+    const client = new HeedKitClient({ workspaceKey: "fh_test", apiUrl: "http://api" });
 
     await client.init({ externalId: "alice" });
 
     expect(client.getEndUserId()).toBe("eu-alice");
-    expect(client.getProjectName()).toBe("Test");
+    expect(client.getWorkspaceName()).toBe("Test");
     expect(client.getTheme()).toEqual({ primary: "#000000" });
     expect(client.getEnabledKinds()).toContain("feature_request");
     expect(client.getKindVisibility().bug_report).toBe("private");
@@ -225,22 +225,23 @@ describe("anonymous identity persistence", () => {
     });
   });
 
-  it("tolerates an old server response missing kind_visibility / kind_interactions", async () => {
-    const partial = {
-      project_id: "p",
-      project_name: "Old",
-      theme: {},
-      enabled_kinds: ["feature_request"],
-      end_user_id: "eu",
-    };
-    mockFetch(() => jsonResponse(partial));
-    const client = new HeedKitClient({ projectKey: "fh_test", apiUrl: "http://api" });
+  it("reuses identity from a cache lacking workspace config, then replaces the cache", async () => {
+    const store = stubLocalStorage();
+    store.set("heedkit.identity.fh_test", JSON.stringify({
+      identity: "idtok-old",
+      init: { end_user_id: "eu-old", legacy_config: { name: "Old" } },
+    }));
+    const { calls } = mockFetch(() => jsonResponse(FULL_INIT_RESPONSE));
+    const client = new HeedKitClient({ workspaceKey: "fh_test", apiUrl: "http://api" });
 
-    await client.init({ externalId: "alice" });
-    // Falls back to empty maps rather than throwing.
-    expect(client.getKindVisibility()).toEqual({});
-    expect(client.getKindInteractions()).toEqual({});
-    expect(client.getInteractionsFor("feature_request")).toEqual([]);
+    await client.init();
+
+    expect(calls).toHaveLength(1);
+    const headers = new Headers(calls[0].init!.headers as HeadersInit);
+    expect(headers.get("X-HeedKit-Identity")).toBe("idtok-old");
+    expect(client.getWorkspaceName()).toBe("Test");
+    const refreshed = JSON.parse(store.get("heedkit.identity.fh_test")!);
+    expect(refreshed.init.workspace.name).toBe("Test");
   });
 });
 
@@ -251,7 +252,7 @@ describe("anonymous identity persistence", () => {
 describe("getInteractionsFor", () => {
   it("returns enabled interactions in canonical order", async () => {
     mockFetch(() => jsonResponse(FULL_INIT_RESPONSE));
-    const client = new HeedKitClient({ projectKey: "fh_test", apiUrl: "http://api" });
+    const client = new HeedKitClient({ workspaceKey: "fh_test", apiUrl: "http://api" });
     await client.init({ externalId: "alice" });
 
     // Even though the JSON had `upvote: true, downvote: false`, the canonical
@@ -264,15 +265,15 @@ describe("getInteractionsFor", () => {
   it("returns up+down together when both enabled", async () => {
     mockFetch(() => jsonResponse({
       ...FULL_INIT_RESPONSE,
-      project: {
-        ...FULL_INIT_RESPONSE.project,
+      workspace: {
+        ...FULL_INIT_RESPONSE.workspace,
         kind_interactions: {
-          ...FULL_INIT_RESPONSE.project.kind_interactions,
+          ...FULL_INIT_RESPONSE.workspace.kind_interactions,
           feature_request: { upvote: true, downvote: true },
         },
       },
     }));
-    const client = new HeedKitClient({ projectKey: "fh_test", apiUrl: "http://api" });
+    const client = new HeedKitClient({ workspaceKey: "fh_test", apiUrl: "http://api" });
     await client.init({ externalId: "alice" });
     expect(client.getInteractionsFor("feature_request")).toEqual(["upvote", "downvote"]);
   });
@@ -280,12 +281,12 @@ describe("getInteractionsFor", () => {
   it("returns empty array for a kind that has no interactions enabled", async () => {
     mockFetch(() => jsonResponse({
       ...FULL_INIT_RESPONSE,
-      project: {
-        ...FULL_INIT_RESPONSE.project,
-        kind_interactions: { ...FULL_INIT_RESPONSE.project.kind_interactions, appreciation: { like: false } },
+      workspace: {
+        ...FULL_INIT_RESPONSE.workspace,
+        kind_interactions: { ...FULL_INIT_RESPONSE.workspace.kind_interactions, appreciation: { like: false } },
       },
     }));
-    const client = new HeedKitClient({ projectKey: "fh_test", apiUrl: "http://api" });
+    const client = new HeedKitClient({ workspaceKey: "fh_test", apiUrl: "http://api" });
     await client.init({ externalId: "alice" });
     expect(client.getInteractionsFor("appreciation")).toEqual([]);
   });
@@ -298,7 +299,7 @@ describe("getInteractionsFor", () => {
 describe("list / submit / vote", () => {
   async function newReady(handler: (call: FetchCall) => Response | Promise<Response>) {
     const records = mockFetch(handler);
-    const client = new HeedKitClient({ projectKey: "fh_test", apiUrl: "http://api" });
+    const client = new HeedKitClient({ workspaceKey: "fh_test", apiUrl: "http://api" });
     await client.init({ externalId: "alice" });
     records.calls.length = 0;
     return { client, calls: records.calls };
@@ -397,7 +398,7 @@ describe("list / submit / vote", () => {
 
   it("throws Error before init when calling list/submit/vote", async () => {
     mockFetch(() => jsonResponse(FULL_INIT_RESPONSE));
-    const client = new HeedKitClient({ projectKey: "fh_test", apiUrl: "http://api" });
+    const client = new HeedKitClient({ workspaceKey: "fh_test", apiUrl: "http://api" });
     await expect(client.list()).rejects.toThrow(/not initialized/);
     await expect(client.submit({ title: "x" })).rejects.toThrow(/not initialized/);
     await expect(client.vote("x")).rejects.toThrow(/not initialized/);
@@ -411,31 +412,31 @@ describe("list / submit / vote", () => {
 describe("error handling", () => {
   it("surfaces the Rails `error` code on a 4xx", async () => {
     mockFetch(() =>
-      new Response(JSON.stringify({ error: "invalid_project_key" }), {
+      new Response(JSON.stringify({ error: "invalid_workspace_key" }), {
         status: 401,
         headers: { "Content-Type": "application/json" },
       })
     );
-    const client = new HeedKitClient({ projectKey: "bad", apiUrl: "http://api" });
-    await expect(client.init()).rejects.toThrow(/invalid_project_key/);
+    const client = new HeedKitClient({ workspaceKey: "bad", apiUrl: "http://api" });
+    await expect(client.init()).rejects.toThrow(/invalid_workspace_key/);
   });
 
   it("falls back to the legacy `detail` field when `error` is absent", async () => {
     mockFetch(() =>
-      new Response(JSON.stringify({ detail: "Invalid project key" }), {
+      new Response(JSON.stringify({ detail: "Invalid workspace key" }), {
         status: 401,
         headers: { "Content-Type": "application/json" },
       })
     );
-    const client = new HeedKitClient({ projectKey: "bad", apiUrl: "http://api" });
-    await expect(client.init()).rejects.toThrow(/Invalid project key/);
+    const client = new HeedKitClient({ workspaceKey: "bad", apiUrl: "http://api" });
+    await expect(client.init()).rejects.toThrow(/Invalid workspace key/);
   });
 
   it("falls back to HTTP <status> when the body isn't JSON", async () => {
     mockFetch(() =>
       new Response("Internal Server Error", { status: 500 })
     );
-    const client = new HeedKitClient({ projectKey: "ok", apiUrl: "http://api" });
+    const client = new HeedKitClient({ workspaceKey: "ok", apiUrl: "http://api" });
     await expect(client.init()).rejects.toThrow(/HTTP 500/);
   });
 });

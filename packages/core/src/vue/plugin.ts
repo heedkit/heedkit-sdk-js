@@ -7,7 +7,7 @@ export type HeedKitInjection = {
   theme: Ref<Theme>;
   // Persisted so FeedbackButton can re-mount the shared JS widget without
   // reaching into the client's private fields.
-  projectKey: string;
+  workspaceKey: string;
   apiUrl?: string;
   user?: EndUser;
 };
@@ -26,7 +26,7 @@ export function createHeedKit(config: HeedKitConfig) {
       });
       app.provide(HEEDKIT_KEY, {
         client, ready, theme,
-        projectKey: config.projectKey,
+        workspaceKey: config.workspaceKey,
         apiUrl: config.apiUrl,
         user: config.user,
       });

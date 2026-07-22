@@ -15,9 +15,9 @@ framework.
 
 ## Before you start — collect two values
 
-From the user's HeedKit project **Integrations** page:
+From the user's HeedKit workspace **Integrations** page:
 
-1. **`projectKey`** — public key, format `fk_...`. Safe to ship to the browser.
+1. **`workspaceKey`** — public key, format `fk_...`. Safe to ship to the browser.
 2. **`apiUrl`** — the API base, e.g. `https://heedkit.com` (origin only — the SDK appends `/sdk/...`).
 
 ⚠️ **`apiUrl` gotcha:** pass the HeedKit **origin only, never an `/sdk`-suffixed URL** —
@@ -50,14 +50,14 @@ is under `@heedkit/sdk-js/*` now.
 **Vanilla** — `mount()` injects a floating launcher into `document.body`:
 ```ts
 import { mount } from "@heedkit/sdk-js";
-const widget = mount({ projectKey: "fk_xxx", apiUrl: "https://heedkit.com" });
+const widget = mount({ workspaceKey: "fk_xxx", apiUrl: "https://heedkit.com" });
 // widget.open() / widget.close() / widget.destroy()
 ```
 
 **React:**
 ```tsx
 import { HeedKitProvider, FeedbackButton } from "@heedkit/sdk-js/react";
-<HeedKitProvider projectKey="fk_xxx" apiUrl="https://heedkit.com">
+<HeedKitProvider workspaceKey="fk_xxx" apiUrl="https://heedkit.com">
   <FeedbackButton label="Feedback" />
 </HeedKitProvider>
 ```
@@ -65,7 +65,7 @@ import { HeedKitProvider, FeedbackButton } from "@heedkit/sdk-js/react";
 **Vue 3:**
 ```ts
 import { createHeedKit } from "@heedkit/sdk-js/vue";
-app.use(createHeedKit({ projectKey: "fk_xxx", apiUrl: "https://heedkit.com" }));
+app.use(createHeedKit({ workspaceKey: "fk_xxx", apiUrl: "https://heedkit.com" }));
 // template: <FeedbackButton label="Feedback" />  (import from @heedkit/sdk-js/vue)
 ```
 
@@ -73,7 +73,7 @@ app.use(createHeedKit({ projectKey: "fk_xxx", apiUrl: "https://heedkit.com" }));
 ```ts
 import { provideHeedKit } from "@heedkit/sdk-js/angular";
 bootstrapApplication(AppComponent, { providers: [
-  provideHeedKit({ projectKey: "fk_xxx", apiUrl: "https://heedkit.com" }),
+  provideHeedKit({ workspaceKey: "fk_xxx", apiUrl: "https://heedkit.com" }),
 ]});
 // template: <heedkit-button label="Feedback" />  (import FeedbackButtonComponent)
 ```
@@ -81,7 +81,7 @@ bootstrapApplication(AppComponent, { providers: [
 **`<script>` tag (no bundler):** `window.HeedKit` from the CDN bundle:
 ```html
 <script src="https://unpkg.com/@heedkit/sdk-js"></script>
-<script>HeedKit.mount({ projectKey: "fk_xxx", apiUrl: "https://heedkit.com" });</script>
+<script>HeedKit.mount({ workspaceKey: "fk_xxx", apiUrl: "https://heedkit.com" });</script>
 ```
 
 ## Step 4 — identify the user (recommended, not required)
@@ -91,7 +91,7 @@ by the app's backend — the API rejects any `externalId` without a valid `userH
 (`401 invalid_user_signature`).
 
 1. **Backend** (authenticated route, e.g. `GET /heedkit/identity`):
-   `userHash = lowercase_hex(HMAC_SHA256(key = projectSecret, message = String(session.user.id)))`
+   `userHash = lowercase_hex(HMAC_SHA256(key = serverSecret, message = String(session.user.id)))`
    → respond `{ externalId, userHash, name, email }`. Sign ONLY the session user's id —
    never an id taken from request params.
    Self-check: secret `fk_secret_test_0123456789abcdef` + externalId `user-42` must give
@@ -108,7 +108,7 @@ Omit `user` entirely for anonymous feedback — an anonymous end-user is created
 server-issued identity token is remembered via `localStorage`. Do NOT invent a device id
 as `externalId` for anonymous users; unsigned ids are rejected.
 
-**Never** put the project *secret* in client code. If you find yourself hardcoding a secret
+**Never** put the workspace *secret* in client code. If you find yourself hardcoding a secret
 in the frontend, stop — the hash must be computed server-side.
 
 Requires `@heedkit/sdk-js` >= 0.3.0 (`userHash` support). On 0.2.x, call the wire API
@@ -120,7 +120,7 @@ replay the returned `identity` as the `X-HeedKit-Identity` header on later `/sdk
 Use `HeedKitClient` directly:
 ```ts
 import { HeedKitClient } from "@heedkit/sdk-js";
-const fk = new HeedKitClient({ projectKey: "fk_xxx", apiUrl: "https://heedkit.com" });
+const fk = new HeedKitClient({ workspaceKey: "fk_xxx", apiUrl: "https://heedkit.com" });
 await fk.init({ externalId: "user-123" });        // call first
 await fk.list({ status?, kind?, sort? });          // features (kind: feature_request|bug_report|improvement|appreciation|other; sort: top|new)
 await fk.submit({ title, description?, kind?, tag? });
@@ -133,6 +133,6 @@ await fk.comment(featureId, body);
 ## Verify
 
 - Load the app; the feedback launcher should appear (bottom corner) and open a panel.
-- If nothing shows: 90% of the time it's a wrong/missing `apiUrl` or `projectKey`. Check the
+- If nothing shows: 90% of the time it's a wrong/missing `apiUrl` or `workspaceKey`. Check the
   network tab for a failing request to `<apiUrl>/sdk/init` and fix the base URL.
 - TypeScript types ship for every entry point — no `@types/*` needed.

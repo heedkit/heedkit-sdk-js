@@ -21,7 +21,7 @@ export default defineComponent({
     function ensureMounted() {
       if (widget) return;
       widget = mount({
-        projectKey: fh!.projectKey,
+        workspaceKey: fh!.workspaceKey,
         apiUrl: fh!.apiUrl,
         user: fh!.user,
         label: props.label,

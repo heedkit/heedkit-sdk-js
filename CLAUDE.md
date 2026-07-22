@@ -33,7 +33,7 @@ substantial native-UI reimplementation, not a thin binding — it only reuses th
 - `widget.ts` — floating widget, built via `innerHTML` strings; **preserve escaping, it's an
   XSS surface**.
 - `index.ts` — public barrel (must re-export everything the framework wrappers use; e.g.
-  `ProjectConfig` had to be added here). This is the `@heedkit/sdk-js` entry.
+  `WorkspaceConfig` had to be added here). This is the `@heedkit/sdk-js` entry.
 - `react.tsx` — the `/react` entry (`HeedKitProvider`, `useHeedKit`, `FeedbackButton`).
 - `vue/` — the `/vue` entry (`createHeedKit` plugin + `FeedbackButton`; the SFC was converted
   to a `defineComponent` .ts so one tsup pass builds everything — no vite needed).

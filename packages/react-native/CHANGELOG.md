@@ -69,3 +69,7 @@
 
 - Updated dependencies
   - @heedkit/sdk-js@0.2.0
+# 0.2.0
+
+- Breaking: rename the provider and client configuration to `workspaceKey` and
+  expose Workspace-named configuration from `@heedkit/sdk-js`.

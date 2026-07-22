@@ -23,9 +23,9 @@ npm i @heedkit/sdk-js
 
 ## Quick start
 
-You need two things from your HeedKit project's **Integrations** page:
+You need two things from your HeedKit workspace's **Integrations** page:
 
-- **`projectKey`** — your public key, e.g. `fk_xxx` (safe to ship to the browser).
+- **`workspaceKey`** — your public key, e.g. `fk_xxx` (safe to ship to the browser).
 - **`apiUrl`** — your API base, e.g. `https://heedkit.com` (origin only — the SDK appends `/sdk/...`).
 
 ### Vanilla JS — drop-in widget
@@ -36,7 +36,7 @@ You need two things from your HeedKit project's **Integrations** page:
 import { mount } from "@heedkit/sdk-js";
 
 const widget = mount({
-  projectKey: "fk_xxx",
+  workspaceKey: "fk_xxx",
   apiUrl: "https://heedkit.com",
   user: { externalId: "user-123", email: "ada@example.com" },
   label: "Feedback",      // launcher text (default: "Feedback")
@@ -55,7 +55,7 @@ A single IIFE bundle exposes `window.HeedKit`:
 ```html
 <script src="https://unpkg.com/@heedkit/sdk-js"></script>
 <script>
-  HeedKit.mount({ projectKey: "fk_xxx", apiUrl: "https://heedkit.com" });
+  HeedKit.mount({ workspaceKey: "fk_xxx", apiUrl: "https://heedkit.com" });
 </script>
 ```
 
@@ -73,7 +73,7 @@ import { HeedKitProvider, FeedbackButton, useHeedKit } from "@heedkit/sdk-js/rea
 function App() {
   return (
     <HeedKitProvider
-      projectKey="fk_xxx"
+      workspaceKey="fk_xxx"
       apiUrl="https://heedkit.com"
       user={{ externalId: "user-123" }}
     >
@@ -98,7 +98,7 @@ import { createHeedKit } from "@heedkit/sdk-js/vue";
 import App from "./App.vue";
 
 createApp(App)
-  .use(createHeedKit({ projectKey: "fk_xxx", apiUrl: "https://heedkit.com" }))
+  .use(createHeedKit({ workspaceKey: "fk_xxx", apiUrl: "https://heedkit.com" }))
   .mount("#app");
 ```
 
@@ -121,7 +121,7 @@ import { AppComponent } from "./app.component";
 
 bootstrapApplication(AppComponent, {
   providers: [
-    provideHeedKit({ projectKey: "fk_xxx", apiUrl: "https://heedkit.com" }),
+    provideHeedKit({ workspaceKey: "fk_xxx", apiUrl: "https://heedkit.com" }),
   ],
 });
 ```
@@ -145,15 +145,15 @@ export class AppComponent {}
 Passing a `user` attributes feedback to a real person. A named identity must be
 **signed by your backend** — the API rejects any `externalId` that arrives without a
 valid `userHash` (`401 invalid_user_signature`). Never compute the hash in the browser;
-the project *secret* stays server-side.
+the workspace *secret* stays server-side.
 
 ```ts
 // On YOUR backend (authenticated route):
-//   userHash = lowercase_hex( HMAC_SHA256(projectSecret, externalId) )
+//   userHash = lowercase_hex( HMAC_SHA256(serverSecret, externalId) )
 //   e.g. GET /heedkit/identity -> { externalId, userHash, name, email }
 
 const me = await (await fetch("/heedkit/identity")).json();
-const fk = new HeedKitClient({ projectKey: "fk_xxx", apiUrl: "https://heedkit.com" });
+const fk = new HeedKitClient({ workspaceKey: "fk_xxx", apiUrl: "https://heedkit.com" });
 await fk.init({ externalId: me.externalId, userHash: me.userHash, email: me.email });
 ```
 
@@ -175,25 +175,25 @@ bindings wrap):
 ```ts
 import { HeedKitClient } from "@heedkit/sdk-js";
 
-const fk = new HeedKitClient({ projectKey: "fk_xxx", apiUrl: "https://heedkit.com" });
+const fk = new HeedKitClient({ workspaceKey: "fk_xxx", apiUrl: "https://heedkit.com" });
 await fk.init({ externalId: "user-123" });
 ```
 
 | Method | Description |
 |---|---|
-| `init(user?)` | Identify (find-or-create) the end-user; returns project config + identity. Call first. |
+| `init(user?)` | Identify (find-or-create) the end-user; returns workspace config + identity. Call first. |
 | `list({ status?, kind?, sort?, cursor? })` | List features (public + the caller's own private), cursor-paginated. |
 | `submit({ title, description?, kind?, tag? })` | Submit a feature request as the end-user. |
 | `vote(featureId)` | Toggle the end-user's vote. Returns `{ voted, vote_count }`. |
 | `listComments(featureId)` | List a feature's public comments. |
 | `comment(featureId, body)` | Add a comment as the end-user. |
-| `getTheme()` / `getProjectName()` / `getEnabledKinds()` / `getEndUserId()` … | Read project config resolved during `init()`. |
+| `getTheme()` / `getWorkspaceName()` / `getEnabledKinds()` / `getEndUserId()` … | Read workspace config resolved during `init()`. |
 
 ### Configuration
 
 ```ts
 type HeedKitConfig = {
-  projectKey: string;   // your public key (fk_...)
+  workspaceKey: string;   // your public key (fk_...)
   apiUrl?: string;      // API base; defaults to https://api.heedkit.com
   user?: EndUser;       // optional identity
 };

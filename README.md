@@ -14,7 +14,7 @@ npm i @heedkit/sdk-js
 import { mount } from "@heedkit/sdk-js";
 
 mount({
-  projectKey: "fh_xxx",
+  workspaceKey: "fh_xxx",
   user: { externalId: "user-123", email: "you@app.com" },
 });
 ```
@@ -25,7 +25,7 @@ mount({
 <script src="https://cdn.jsdelivr.net/npm/@heedkit/sdk-js/dist/heedkit.iife.js"></script>
 <script>
   HeedKit.mount({
-    projectKey: "fh_xxx",
+    workspaceKey: "fh_xxx",
     user: { externalId: "user-123" },
   });
 </script>
@@ -37,7 +37,7 @@ That's it — a floating "Feedback" button appears in the bottom-right and opens
 
 ```ts
 mount({
-  projectKey: "fh_xxx",      // required
+  workspaceKey: "fh_xxx",      // required
   apiUrl: "https://...",     // optional, defaults to cloud
   user: { externalId, email, name, avatarUrl, platform },
   label: "Send feedback",    // launcher button label
@@ -49,7 +49,7 @@ mount({
 ## Manual control
 
 ```ts
-const widget = mount({ projectKey: "fh_xxx", hideLauncher: true });
+const widget = mount({ workspaceKey: "fh_xxx", hideLauncher: true });
 
 document.querySelector("#my-button")!.addEventListener("click", () => {
   widget.open();
@@ -68,7 +68,7 @@ If you want to use the API client without the widget UI:
 ```ts
 import { HeedKitClient } from "@heedkit/sdk-js";
 
-const client = new HeedKitClient({ projectKey: "fh_xxx" });
+const client = new HeedKitClient({ workspaceKey: "fh_xxx" });
 await client.init({ externalId: "user-123" });
 const features = await client.list();
 ```

@@ -11,7 +11,7 @@ import {
   type InitResult,
   type Interaction,
   type KindInteractions,
-  type ProjectConfig,
+  type WorkspaceConfig,
   type ShowCounts,
   type Theme,
   type Visibility,
@@ -29,7 +29,7 @@ export {
   type InitResult,
   type Interaction,
   type KindInteractions,
-  type ProjectConfig,
+  type WorkspaceConfig,
   type ShowCounts,
   type Theme,
   type Visibility,
@@ -52,12 +52,12 @@ type Ctx = {
 const HeedKitContext = React.createContext<Ctx | null>(null);
 
 export function HeedKitProvider({
-  projectKey,
+  workspaceKey,
   apiUrl,
   user,
   children,
 }: { children: React.ReactNode } & HeedKitConfig) {
-  const [client] = React.useState(() => new HeedKitClient({ projectKey, apiUrl, user }));
+  const [client] = React.useState(() => new HeedKitClient({ workspaceKey, apiUrl, user }));
   const [ready, setReady] = React.useState(false);
   const [theme, setTheme] = React.useState<Theme>({});
 
@@ -98,13 +98,13 @@ export type FeedbackButtonProps = HeedKitConfig & {
 
 export const FeedbackButton = React.forwardRef<Widget | null, FeedbackButtonProps>(
   function FeedbackButton(
-    { projectKey, apiUrl, user, label, hideLauncher }: FeedbackButtonProps,
+    { workspaceKey, apiUrl, user, label, hideLauncher }: FeedbackButtonProps,
     ref: React.ForwardedRef<Widget | null>,
   ) {
     const widgetRef = React.useRef<Widget | null>(null);
 
     React.useEffect(() => {
-      const w = mount({ projectKey, apiUrl, user, label, hideLauncher });
+      const w = mount({ workspaceKey, apiUrl, user, label, hideLauncher });
       widgetRef.current = w;
       if (typeof ref === "function") ref(w);
       else if (ref) ref.current = w;
@@ -119,7 +119,7 @@ export const FeedbackButton = React.forwardRef<Widget | null, FeedbackButtonProp
       // change destroys the widget and creates a fresh client + init() call, so
       // callers who care about init cost should keep `user` stable.
       // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [projectKey, apiUrl, label, hideLauncher, JSON.stringify(user)]);
+    }, [workspaceKey, apiUrl, label, hideLauncher, JSON.stringify(user)]);
 
     return null;
   },

@@ -12,7 +12,7 @@ import {
 // ------------------------------------------------------------------
 // CONFIG — edit these two, or set them via Vite env vars.
 //
-//   VITE_HEEDKIT_PROJECT_KEY   public project key (starts with pk_)
+//   VITE_HEEDKIT_WORKSPACE_KEY   public workspace key (starts with pk_)
 //   VITE_HEEDKIT_API_URL       Rails endpoint (no trailing /sdk)
 //
 // Browser code talks to the Rails dev server at heedkit.localhost:3000.
@@ -20,8 +20,8 @@ import {
 // apiUrl is the bare origin.
 // ------------------------------------------------------------------
 const CONFIG = {
-  projectKey:
-    (import.meta.env.VITE_HEEDKIT_PROJECT_KEY as string | undefined) ??
+  workspaceKey:
+    (import.meta.env.VITE_HEEDKIT_WORKSPACE_KEY as string | undefined) ??
     "pk_REPLACE_ME",
   apiUrl:
     (import.meta.env.VITE_HEEDKIT_API_URL as string | undefined) ??
@@ -43,7 +43,7 @@ const KIND_LABELS: Record<FeatureKind, string> = {
 const $ = <T extends HTMLElement>(sel: string) =>
   document.querySelector(sel) as T;
 
-const projectNameEl = $("#project-name");
+const workspaceNameEl = $("#workspace-name");
 const bannerEl = $("#config-banner");
 const featuresEl = $("#features");
 const sortEl = $<HTMLSelectElement>("#sort");
@@ -57,7 +57,7 @@ const kindEl = $<HTMLSelectElement>("#kind");
 // The single SDK client used throughout the demo.
 // ------------------------------------------------------------------
 const client = new HeedKitClient({
-  projectKey: CONFIG.projectKey,
+  workspaceKey: CONFIG.workspaceKey,
   apiUrl: CONFIG.apiUrl,
 });
 
@@ -68,14 +68,14 @@ function showBanner(msg: string) {
 
 // ------------------------------------------------------------------
 // 1 + 2) Configure + init/identify an end-user (POST /sdk/init).
-//   init() returns { end_user_id, project } and stashes the end_user_id
+//   init() returns { end_user_id, workspace } and stashes the end_user_id
 //   inside the client so later calls (list/vote/submit/comment) reuse it.
 //   With no externalId the SDK falls back to a stable per-browser device id.
 // ------------------------------------------------------------------
 async function start() {
-  if (CONFIG.projectKey === "pk_REPLACE_ME") {
+  if (CONFIG.workspaceKey === "pk_REPLACE_ME") {
     showBanner(
-      "Set a real project key: edit CONFIG.projectKey in main.ts or run with VITE_HEEDKIT_PROJECT_KEY=pk_... npm run dev",
+      "Set a real workspace key: edit CONFIG.workspaceKey in main.ts or run with VITE_HEEDKIT_WORKSPACE_KEY=pk_... npm run dev",
     );
   }
 
@@ -86,18 +86,18 @@ async function start() {
       email: "demo@example.com",
       platform: "web",
     });
-    projectNameEl.textContent = result.project.name || "HeedKit demo";
+    workspaceNameEl.textContent = result.workspace.name || "HeedKit demo";
     populateKindOptions();
     await loadFeatures();
   } catch (err) {
     showBanner(
-      `init failed: ${(err as Error).message}. Is the Rails server running (bin/dev) and is the project key valid?`,
+      `init failed: ${(err as Error).message}. Is the Rails server running (bin/dev) and is the workspace key valid?`,
     );
     featuresEl.innerHTML = `<p class="muted">Could not initialize.</p>`;
   }
 }
 
-// Populate the submit-form kind <select> with only the kinds the project
+// Populate the submit-form kind <select> with only the kinds the workspace
 // enabled (from /sdk/init). Fall back to all kinds if none reported.
 function populateKindOptions() {
   const kinds = client.getEnabledKinds();
