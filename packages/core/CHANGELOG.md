@@ -1,5 +1,18 @@
 # @heedkit/sdk-js
 
+## 0.4.0
+
+### Minor Changes
+
+- BREAKING: the client speaks the workspace wire contract and requires a backend
+  that does too. `projectKey` is now `workspaceKey` (constructor option and
+  `HeedKit.init` prop across react/vue/angular subpaths), requests authenticate
+  with the `X-Workspace-Key` header (was `X-Project-Key`), `/sdk/init` config is
+  read from the `workspace` key, and the exported `ProjectConfig` /
+  `getProjectName` are now `WorkspaceConfig` / `getWorkspaceName`. End-user
+  identity is preserved on upgrade: a pre-0.4 cached payload keeps its identity
+  token and is re-hydrated with workspace-shaped config on the next init.
+
 ## 0.3.4
 
 ### Patch Changes

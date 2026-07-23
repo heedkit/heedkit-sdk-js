@@ -1,5 +1,18 @@
 # @heedkit/sdk-react-native
 
+## 0.2.0
+
+### Minor Changes
+
+- BREAKING: `projectKey` is now `workspaceKey` on `HeedKitProvider` /
+  `FeedbackScreen`, following the workspace wire contract cutover in
+  @heedkit/sdk-js 0.4.0 (requires a workspace-contract backend).
+
+### Patch Changes
+
+- Updated dependencies
+  - @heedkit/sdk-js@0.4.0
+
 ## 0.1.10
 
 ### Patch Changes
