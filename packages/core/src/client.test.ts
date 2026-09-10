@@ -161,7 +161,7 @@ describe("anonymous identity persistence", () => {
 
     const second = new HeedKitClient({ workspaceKey: "fh_test", apiUrl: "http://api" });
     await second.init();
-    expect(calls).toHaveLength(1); // hydrated from storage — no second init
+    expect(calls).toHaveLength(2); // token is reused, while config is refreshed live
     expect(second.getEndUserId()).toBe("eu-alice");
     expect(second.getWorkspaceName()).toBe("Test");
 
@@ -204,7 +204,7 @@ describe("anonymous identity persistence", () => {
     expect(out).toEqual({ voted: true, vote_count: 1 });
     // call sequence: init, vote(401), init, vote(ok)
     expect(calls.map((c) => new URL(c.url).pathname)).toEqual([
-      "/sdk/init", "/sdk/features/7/vote", "/sdk/init", "/sdk/features/7/vote",
+      "/sdk/init", "/sdk/init", "/sdk/features/7/vote", "/sdk/init", "/sdk/features/7/vote",
     ]);
   });
 
@@ -227,10 +227,7 @@ describe("anonymous identity persistence", () => {
 
   it("reuses identity from a cache lacking workspace config, then replaces the cache", async () => {
     const store = stubLocalStorage();
-    store.set("heedkit.identity.fh_test", JSON.stringify({
-      identity: "idtok-old",
-      init: { end_user_id: "eu-old", legacy_config: { name: "Old" } },
-    }));
+    store.set("heedkit.anonymous.v1.http://api.fh_test", "idtok-old");
     const { calls } = mockFetch(() => jsonResponse(FULL_INIT_RESPONSE));
     const client = new HeedKitClient({ workspaceKey: "fh_test", apiUrl: "http://api" });
 
@@ -240,8 +237,7 @@ describe("anonymous identity persistence", () => {
     const headers = new Headers(calls[0].init!.headers as HeadersInit);
     expect(headers.get("X-HeedKit-Identity")).toBe("idtok-old");
     expect(client.getWorkspaceName()).toBe("Test");
-    const refreshed = JSON.parse(store.get("heedkit.identity.fh_test")!);
-    expect(refreshed.init.workspace.name).toBe("Test");
+    expect(store.get("heedkit.anonymous.v1.http://api.fh_test")).toBe("idtok-1");
   });
 });
 
@@ -275,7 +271,7 @@ describe("getInteractionsFor", () => {
     }));
     const client = new HeedKitClient({ workspaceKey: "fh_test", apiUrl: "http://api" });
     await client.init({ externalId: "alice" });
-    expect(client.getInteractionsFor("feature_request")).toEqual(["upvote", "downvote"]);
+    expect(client.getInteractionsFor("feature_request")).toEqual(["upvote"]);
   });
 
   it("returns empty array for a kind that has no interactions enabled", async () => {
